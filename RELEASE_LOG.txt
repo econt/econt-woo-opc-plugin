@@ -1,0 +1,14 @@
+Version 1.1.3 - Added support for block-based checkout ( the classic checkout is still recommended )
+Version 1.1.2 - Send to iFrame total_items(only products price) instead of total_price(total cart price with taxes and shipping costs);
+Version 1.1.1 - Fix total price and weight send to iframe; Update update checkout function to fast reload;
+Version 1.1 - Add new Gutenberg react block to use in checkout and work well with block based themes
+Version 1.0.72 ( 21.03.2025 )- Webiz - Remove confirm_txt parameter to ajax. This allow to iframe to manage button text by selected language;
+Version 1.0.71 ( 21.03.2025 )- Webiz - Update path to load Text domain;
+Version 1.0.7 ( 18.03.2025 )- Webiz - Add new translational string of Confirm button and update language translations
+Version 1.0.6 - Fixed elements overlapping during checkout on small screens.
+Version 1.0.5 - Fixed the priority for action delivery_with_econt_sync_order. Fixed form submit selector.
+Version 1.0.4 - Bug fix
+Version 1.0.3 - Checkout fix for digital products
+Version 1.0.2 - Show order notes in checkout
+Version 1.0.1 - Bug fix
+Version 1.0.0 - Production ready version
