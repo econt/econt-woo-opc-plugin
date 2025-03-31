@@ -1,3 +1,4 @@
+Version 1.1.4 - Added custom version auto-updater via public GitHub repository.
 Version 1.1.3 - Added support for block-based checkout ( the classic checkout is still recommended )
 Version 1.1.2 - Send to iFrame total_items(only products price) instead of total_price(total cart price with taxes and shipping costs);
 Version 1.1.1 - Fix total price and weight send to iframe; Update update checkout function to fast reload;

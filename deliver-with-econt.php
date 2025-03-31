@@ -12,7 +12,7 @@
  * Plugin Name:       Econt Delivery OneCheckout
  * Plugin URI:        https://econt.com/developers/
  * Description:       Econt Shipping Module
- * Version:           1.1.3
+ * Version:           1.1.4
  * Author:            Econt Express LTD.
  * Author URI:        https://econt.com/developers/
  * License:           GPL-2.0+
@@ -102,3 +102,18 @@ if ( ! function_exists( 'econt_init_blocks' ) ) {
 	// Use wp hook instead of plugins_loaded
 	add_action( 'wp', 'econt_init_blocks', 20 );
 }
+
+/**
+ * Init the plugin updater library.
+ */
+require 'src/plugin-update-checker/plugin-update-checker.php';
+use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
+
+$myUpdateChecker = PucFactory::buildUpdateChecker(
+	'https://github.com/econt/woo-opc-plugin', // Official Econt repository
+	__FILE__,
+	'deliver-with-econt'
+);
+
+// Set the branch that contains the stable release.
+$myUpdateChecker->setBranch( 'main' );
