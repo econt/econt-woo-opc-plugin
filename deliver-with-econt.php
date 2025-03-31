@@ -110,7 +110,7 @@ require 'src/plugin-update-checker/plugin-update-checker.php';
 use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
 
 $myUpdateChecker = PucFactory::buildUpdateChecker(
-	'https://github.com/econt/woo-opc-plugin', // Official Econt repository
+	'https://github.com/econt/econt-woo-opc-plugin', // Official Econt repository
 	__FILE__,
 	'deliver-with-econt'
 );
