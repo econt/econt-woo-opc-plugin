@@ -6,11 +6,23 @@ import { __ } from "@wordpress/i18n"
 import { applyFilters } from "@wordpress/hooks"
 import { createPortal } from "react-dom"
 
+
 // No TypeScript declarations needed in plain JS
 const EcontDelivery = () => {
     // Declare jQuery and wp variables
     const jQuery = window.jQuery
     const wp = window.wp
+
+    // Helper function to get translation or fallback to the key
+    const getTranslation = (key) => {
+        // Check if econtTranslations is available and has the key
+        if (typeof window.econtTranslations !== 'undefined' &&
+            window.econtTranslations[key]) {
+            return window.econtTranslations[key];
+        }
+        // Fallback to the key itself if translation is not available
+        return key;
+    };
 
     // Component state
     const [iframeUrl, setIframeUrl] = useState("")
@@ -24,6 +36,7 @@ const EcontDelivery = () => {
     const [isEcontSelected, setIsEcontSelected] = useState(false)
     const [portalContainer, setPortalContainer] = useState(null)
     const [isOrderButtonDisabled, setIsOrderButtonDisabled] = useState(false)
+    const [isIframeLoading, setIsIframeLoading] = useState(true) // New state for iframe loading
 
     // Refs
     const isMountedRef = useRef(true)
@@ -177,7 +190,7 @@ const EcontDelivery = () => {
                 placeOrderButton.style.cursor = "not-allowed"
 
                 // Add a tooltip to explain why it's disabled
-                placeOrderButton.title = __("Please complete Econt delivery details first", "deliver-with-econt")
+                placeOrderButton.title = getTranslation('Please complete Econt delivery details first')
             } else {
                 placeOrderButton.style.opacity = ""
                 placeOrderButton.style.cursor = ""
@@ -279,6 +292,9 @@ const EcontDelivery = () => {
 
             // Make AJAX request
             if (typeof jQuery !== "undefined") {
+                // Set loading state when making the request
+                setIsIframeLoading(true)
+
                 const response = await jQuery.ajax({
                     type: "POST",
                     url: window.econtData.ajaxUrl,
@@ -315,6 +331,8 @@ const EcontDelivery = () => {
                 updateIframeWithUrl(fullUrl, true)
             }
         } catch (error) {
+            // Set loading to false if there's an error
+            setIsIframeLoading(false)
             // Silently fail, but keep the button disabled
         }
     }
@@ -325,6 +343,7 @@ const EcontDelivery = () => {
 
         // Update state
         setIframeUrl(url)
+        setIsIframeLoading(true) // Set loading to true when updating iframe URL
 
         // Apply URL to iframe element
         setTimeout(() => {
@@ -345,17 +364,28 @@ const EcontDelivery = () => {
                     try {
                         // This will throw an error if cross-origin
                         const iframeDocument = iframe.contentDocument || iframe.contentWindow?.document
+
+                        // Set loading to false when iframe is loaded
+                        if (isMountedRef.current) {
+                            setIsIframeLoading(false)
+                        }
                     } catch (error) {
-                        // Silently fail
+                        // For cross-origin iframes, we can't access the document
+                        // but we can still know it loaded
+                        if (isMountedRef.current) {
+                            setIsIframeLoading(false)
+                        }
                     }
                 }
 
                 // Add error event listener
                 iframe.onerror = () => {
                     if (isMountedRef.current) {
+                        setIsIframeLoading(false) // Set loading to false on error
                         setTimeout(() => {
                             if (isMountedRef.current && iframe) {
                                 iframe.src = url
+                                setIsIframeLoading(true) // Set loading back to true when retrying
                             }
                         }, 1000)
                     }
@@ -435,8 +465,8 @@ const EcontDelivery = () => {
                     last_name: data.face ? data.face.split(" ")[1] : data.name.split(" ")[1],
                     company: data.face ? data.name : "",
                     address_1: data.address
-                        ? `${__("Delivery to address:", "econt")} ${data.address}`
-                        : `${__("Delivery to office:", "econt")} ${data.office_name_only}`,
+                        ? `${getTranslation('Delivery to address:')} ${data.address}`
+                        : `${getTranslation('Delivery to office:')} ${data.office_name_only}`,
                     city: data.city_name,
                     postcode: data.post_code,
                     phone: data.phone,
@@ -463,6 +493,7 @@ const EcontDelivery = () => {
                 // Trigger checkout update and close iframe
                 wp.data.dispatch("wc/store/cart").invalidateResolutionForStoreSelector("getCartData")
                 setIsEditing(false)
+                setIsIframeLoading(false) // Ensure loading is false when editing is done
 
                 // Enable the place order button now that we have shipping dat
                 togglePlaceOrderButton(false)
@@ -470,6 +501,8 @@ const EcontDelivery = () => {
         } catch (error) {
             // Close iframe even if there's an error
             setIsEditing(false)
+            setIsIframeLoading(false) // Ensure loading is false on error
+
             // Keep the button disabled if there was an error
             togglePlaceOrderButton(true)  // Use the function to ensure state is updated too
         }
@@ -519,6 +552,7 @@ const EcontDelivery = () => {
             } else {
                 // If Econt is not selected, make sure the button is enabled
                 togglePlaceOrderButton(false)
+                setIsIframeLoading(false) // Reset loading state when Econt is not selected
             }
         }
 
@@ -626,8 +660,8 @@ const EcontDelivery = () => {
     }, [isEcontSelected, isEditing, globalShipmentPrices])
 
     // Prepare section title and button text
-    const defaultSectionTitleText = __("Econt Delivery Details", "deliver-with-econt")
-    const defaultEditButtonText = __("Edit delivery details", "deliver-with-econt")
+    const defaultSectionTitleText = getTranslation('Econt Delivery Details')
+    const defaultEditButtonText = getTranslation('Edit delivery details')
     const sectionTitleText = applyFilters("econtDelivery.editButtonText", defaultSectionTitleText)
     const editButtonText = applyFilters("econtDelivery.checkoutButtonText", defaultEditButtonText)
 
@@ -651,8 +685,8 @@ const EcontDelivery = () => {
                         visibility: isEcontSelected && isEditing ? "visible" : "hidden",
                     }}
                 >
-                    {/* Loading message */}
-                    {!iframeUrl && isEcontSelected && isEditing && (
+                    {/* Loading message with spinner - always visible when loading */}
+                    {isEcontSelected && isEditing && isIframeLoading && (
                         <div
                             className="econt-loading"
                             style={{
@@ -661,13 +695,37 @@ const EcontDelivery = () => {
                                 backgroundColor: "#f8f9fa",
                                 border: "1px solid #ddd",
                                 borderRadius: "4px",
+                                textAlign: "center",
                             }}
                         >
-                            {__("Loading Econt delivery options...", "deliver-with-econt")}
+                            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", marginBottom: "10px" }}>
+                                <div
+                                    className="econt-spinner"
+                                    style={{
+                                        width: "30px",
+                                        height: "30px",
+                                        border: "4px solid rgba(0, 0, 0, 0.1)",
+                                        borderRadius: "50%",
+                                        borderTop: "4px solid #3498db",
+                                        animation: "econt-spin 1s linear infinite",
+                                    }}
+                                ></div>
+                            </div>
+                            <div>{getTranslation('Loading Econt delivery options...')}</div>
+
+                            {/* Add CSS animation for the spinner */}
+                            <style>
+                                {`
+                                @keyframes econt-spin {
+                                    0% { transform: rotate(0deg); }
+                                    100% { transform: rotate(360deg); }
+                                }
+                                `}
+                            </style>
                         </div>
                     )}
 
-                    {/* Iframe */}
+                    {/* Iframe - hidden initially and while loading */}
                     <iframe
                         src={iframeUrl || "about:blank"}
                         id="delivery_with_econt_iframe"
@@ -676,14 +734,17 @@ const EcontDelivery = () => {
                             width: "100%",
                             minHeight: "600px",
                             border: "none",
-                            display: isEcontSelected && isEditing && iframeUrl ? "block" : "none",
-                            visibility: isEcontSelected && isEditing && iframeUrl ? "visible" : "hidden",
+                            display: isEcontSelected && isEditing && iframeUrl && !isIframeLoading ? "block" : "none",
+                            visibility: isEcontSelected && isEditing && iframeUrl && !isIframeLoading ? "visible" : "hidden",
                         }}
                         onLoad={() => {
                             if (!iframeUrl) return
 
                             const iframe = document.getElementById("delivery_with_econt_iframe")
                             if (iframe && isEcontSelected && isEditing) {
+                                // Set loading to false when iframe is loaded
+                                setIsIframeLoading(false)
+
                                 iframe.style.display = "block"
                                 iframe.style.visibility = "visible"
                             }
@@ -703,6 +764,8 @@ const EcontDelivery = () => {
                         }}
                         onClick={() => {
                             setIsEditing(true)
+                            setIsIframeLoading(true) // Set loading when edit button is clicked
+
                             // Disable place order button when editing
                             togglePlaceOrderButton(true)
 
@@ -729,7 +792,7 @@ const EcontDelivery = () => {
                             textAlign: "center",
                         }}
                     >
-                        {__("Please complete Econt delivery details before placing your order", "deliver-with-econt")}
+                        {getTranslation('Please complete Econt delivery details before placing your order')}
                     </div>
                 )}
             </div>
@@ -754,6 +817,7 @@ const EcontDelivery = () => {
                 data-econt-component="true"
                 data-econt-shipping-selected="true"
                 data-econt-iframe-url={iframeUrl ? "loaded" : "not-loaded"}
+                data-econt-iframe-loading={isIframeLoading ? "true" : "false"}
             >
                 {renderContent()}
             </div>,
@@ -776,6 +840,7 @@ const EcontDelivery = () => {
             data-econt-component="true"
             data-econt-shipping-selected={isEcontSelected ? "true" : "false"}
             data-econt-iframe-url={iframeUrl ? "loaded" : "not-loaded"}
+            data-econt-iframe-loading={isIframeLoading ? "true" : "false"}
         >
             {renderContent()}
         </div>
@@ -783,4 +848,3 @@ const EcontDelivery = () => {
 }
 
 export default EcontDelivery
-

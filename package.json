@@ -22,6 +22,7 @@
     "@wordpress/element": "^5.0.0",
     "@wordpress/hooks": "^3.58.0",
     "@wordpress/i18n": "^4.58.0",
-    "@wordpress/plugins": "^6.0.0"
+    "@wordpress/plugins": "^6.0.0",
+    "lucide-react": "^0.487.0"
   }
 }

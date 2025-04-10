@@ -16,6 +16,8 @@ class Econt_Blocks {
             return;
         }
 
+	    wp_enqueue_script('wp-i18n');
+
         // Register and enqueue the block script
         wp_register_script(
             'econt-delivery-block',
@@ -31,7 +33,7 @@ class Econt_Blocks {
                 'wc-blocks-checkout',
                 'wc-blocks-registry'
             ),
-            filemtime(plugin_dir_path(__FILE__) . '../build/blocks/checkout.js'),
+            filemtime(plugin_dir_path(__DIR__) . 'build/blocks/checkout.js'),
             true
         );
 
@@ -57,6 +59,20 @@ class Econt_Blocks {
 		    $pack_count += $quantity;
 	    }
 
+	    // Add manual translations as a fallback
+	    $translations = array(
+		    'Edit delivery details' => __('Edit delivery details', 'deliver-with-econt'),
+		    'Econt Delivery Details' => __('Econt Delivery Details', 'deliver-with-econt'),
+		    'Loading Econt delivery options...' => __('Loading Econt delivery options...', 'deliver-with-econt'),
+		    'Please complete Econt delivery details before placing your order' => __('Please complete Econt delivery details before placing your order', 'deliver-with-econt'),
+		    'Please complete Econt delivery details first' => __('Please complete Econt delivery details first', 'deliver-with-econt'),
+		    'Delivery to office:' => __('Delivery to office:', 'deliver-with-econt'),
+		    'Delivery to address:' => __('Delivery to address:', 'deliver-with-econt')
+	    );
+
+	    // Add these translations to the localized data
+	    wp_localize_script('econt-delivery-block', 'econtTranslations', $translations);
+
         wp_localize_script('econt-delivery-block', 'econtData', array(
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('delivery-with-econt-security-nonce'),
@@ -65,7 +81,7 @@ class Econt_Blocks {
             'shopId' => get_option('econt_shop_id', ''), // Make sure this option exists
         ));
 
-        wp_enqueue_script('econt-delivery-block');
+	    wp_enqueue_script('econt-delivery-block');
 
     }
 
