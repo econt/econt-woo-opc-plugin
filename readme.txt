@@ -14,6 +14,9 @@ Econt WooCommerce shipping module.
 
 == Changelog ==
 
+= 1.1.7 = 15.04.2025
+* Block based checkout fix - Send order data to Econt platform;
+
 = 1.1.6 =
 * Classic checkout fix - Switch between default fields and Econt iframe when change shipping methods;
 
