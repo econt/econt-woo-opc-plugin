@@ -1,3 +1,4 @@
+Version 1.1.6 - Classic checkout fix - Switch between default fields and Econt iframe when change shipping methods;
 Version 1.1.5 - Add preloader to iframe loading. Fix React translates;
 Version 1.1.41 - Update BG system translates.
 Version 1.1.4 - Added custom version auto-updater via public GitHub repository.

@@ -14,6 +14,9 @@ Econt WooCommerce shipping module.
 
 == Changelog ==
 
+= 1.1.6 =
+* Classic checkout fix - Switch between default fields and Econt iframe when change shipping methods;
+
 = 1.0 =
 * A change since the previous version.
 * Another change.
