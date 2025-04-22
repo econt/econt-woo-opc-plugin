@@ -375,26 +375,27 @@ add_action('plugins_loaded', 'econt_delivery_load_plugin_textdomain');
 //server side shipping price validation SR-103462
 function action_woocommerce_checkout_process($wccs_custom_checkout_field_pro_process) {
 	global $woocommerce;
-	$chosen_methods = WC()->session->get('chosen_shipping_methods')  ?? [];
-	$chosen_shipping = reset($chosen_methods);
-	
+	$chosen_methods = WC()->session->get('chosen_shipping_methods');
+
+	// Ensure $chosen_methods is an array before using reset()
+	$chosen_methods = is_array($chosen_methods) ? $chosen_methods : [];
+	$chosen_shipping = !empty($chosen_methods) ? reset($chosen_methods) : '';
+
 	if ($chosen_shipping != Delivery_With_Econt_Options::get_plugin_name()) {
 		return;
 	}
-	
+
 	if (!isset($_COOKIE['econt_customer_info_id'])) {
 		function my_woocommerce_add_error($error) {
 			$error = __("You can't submit order, if shipping price is not calculated properly!", 'deliver-with-econt');
 			return $error;
 		}
-		
+
 		add_filter('woocommerce_add_error', 'my_woocommerce_add_error');
-		
+
 		throw new Exception(__("You can't submit order, if shipping price is not calculated properly!", 'deliver-with-econt'));
 	}
 }
-
-;
 
 add_action('woocommerce_checkout_process', 'action_woocommerce_checkout_process', 10, 1);
 
