@@ -16,6 +16,7 @@ Econt WooCommerce shipping module.
 
 = 1.1.9 = 08.05.2025
 * Bug fix - script return when server response shipping_price is 0
+* Bug fix - fill out correct user data when send order to Econt system
 
 = 1.1.8 = 22.04.2025
 * Fix error while server validate shipping price
