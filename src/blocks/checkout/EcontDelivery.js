@@ -411,8 +411,8 @@ const EcontDelivery = () => {
         const data = event.data
 
         // Skip if not a submission event
-        if (data.shipment_error || !data.shipping_price || !data.name) {
-            return
+        if (data.shipment_error || data.shipping_price == null || isNaN(Number(data.shipping_price)) || !data.name) {
+            return;
         }
 
         try {

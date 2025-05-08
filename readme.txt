@@ -14,6 +14,9 @@ Econt WooCommerce shipping module.
 
 == Changelog ==
 
+= 1.1.9 = 08.05.2025
+* Bug fix - script return when server response shipping_price is 0
+
 = 1.1.8 = 22.04.2025
 * Fix error while server validate shipping price
 
