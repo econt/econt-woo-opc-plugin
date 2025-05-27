@@ -118,7 +118,7 @@ class Delivery_With_Econt_Shipping extends WC_Shipping_Method
         }
         
         // Add required params
-        $order['confirm_txt'] = 'Потвърди';
+//        $order['confirm_txt'] = 'Потвърди';
         $order['ignore_history'] = 1;
         
         // error_log('Final order data: ' . print_r($order, true));
