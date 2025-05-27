@@ -15,7 +15,7 @@ Econt WooCommerce shipping module.
 == Changelog ==
 
 = 2.0.0 = 27.05.2025
-* New - send data to external platform when plugin is updated;
+* New - send data to external platform when plugin is updated; Force send data;
 
 = 1.1.9 = 08.05.2025
 * Bug fix - script return when server response shipping_price is 0
