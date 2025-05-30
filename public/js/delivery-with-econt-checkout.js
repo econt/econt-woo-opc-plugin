@@ -12,10 +12,10 @@ jQuery(document).ready(function($){
 		toggleFieldsBasedOnShippingMethod();
 
 		// Listen for shipping method changes
-		$(document.body).on('updated_checkout', function() {
-			toggleFieldsBasedOnShippingMethod();
-			bindShippingMethodChangeEvents();
-		});
+		// $(document.body).on('updated_checkout', function() {
+		// 	toggleFieldsBasedOnShippingMethod();
+		// 	bindShippingMethodChangeEvents();
+		// });
 
 		// Initial binding
 		bindShippingMethodChangeEvents();
@@ -149,10 +149,14 @@ jQuery(document).ready(function($){
 		let payment_input = $('input[name^="payment_method"]');
 		let selected_shipping_method = getSelectedShippingMethod();
 
+		console.log(123123)
+		let econtPrice = getCookie('econt_shippment_price');
+		console.log('Econt price from cookie:', econtPrice);
 		// Show/hide iframe based on previous selections
-		if (global_info_message !== undefined) {
+		if (global_info_message !== undefined || global_shippment_price_cod ) {
 			let iframe = $('#delivery_with_econt_iframe');
 			iframe[0].style.display = 'none';
+			console.log(123)
 			$("#edit_details")[0].style.display = 'block';
 		}
 
@@ -383,6 +387,7 @@ async function getDataFromForm(use_shipping) {
 		},
 		dataType: 'html'
 	});
+
 }
 
 /**
@@ -453,4 +458,11 @@ function checkIfPaymentMethodIsSelected(el_id_payment_method) {
 	else if (del.prop("type") === 'hidden') return true;
 
 	return false;
+}
+
+function getCookie(name) {
+	const value = `; ${document.cookie}`;
+	const parts = value.split(`; ${name}=`);
+	if (parts.length === 2) return parts.pop().split(';').shift();
+	return null;
 }
