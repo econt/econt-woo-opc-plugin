@@ -1,3 +1,4 @@
+Version 2.0.2 - 08.07.2025 - Bind initial load of iframe to update_checkout
 Version 2.0.1 - 31.05.2025 - Fix iframe not close after success price calculation
 Version 2.0.0 - 27.05.2025 - Send data to external platform when plugin is updated; Force send data;
 Version 1.1.9 - 08.05.2025 - Bug fix - script return when server response shipping_price is 0; Bug fix - fill out correct user data when send order to Econt system
