@@ -9,17 +9,17 @@ jQuery(document).ready(function($){
 	// Initialize shipping method toggle
 	function initializeShippingMethodToggle() {
 		// Check initial shipping method and set appropriate display
-		// toggleFieldsBasedOnShippingMethod();
+		toggleFieldsBasedOnShippingMethod();
 
 		// Listen for shipping method changes
-		$(document.body).on('updated_checkout', function() {
-			console.log('updated_checkout')
-			toggleFieldsBasedOnShippingMethod();
-			bindShippingMethodChangeEvents();
-		});
+		// $(document.body).on('updated_checkout', function() {
+		// 	console.log('updated_checkout')
+		// 	toggleFieldsBasedOnShippingMethod();
+		// 	bindShippingMethodChangeEvents();
+		// });
 
 		// Initial binding
-		// bindShippingMethodChangeEvents();
+		bindShippingMethodChangeEvents();
 	}
 
 	// Toggle between Econt iframe and default WooCommerce fields
@@ -156,7 +156,6 @@ jQuery(document).ready(function($){
 		if (global_info_message !== undefined || global_shippment_price_cod ) {
 			let iframe = $('#delivery_with_econt_iframe');
 			iframe[0].style.display = 'none';
-			console.log(123)
 			$("#edit_details")[0].style.display = 'block';
 		}
 
@@ -308,7 +307,11 @@ jQuery(document).ready(function($){
 	}, false);
 
 	// Initialize the shipping method toggle functionality
-	initializeShippingMethodToggle();
+	// Wait for WooCommerce to signal it's ready
+	$(document.body).on('init_checkout', function() {
+		console.log('init checkout')
+		initializeShippingMethodToggle();
+	});
 
 	// Reset cookies on page load
 	resetCookies();
