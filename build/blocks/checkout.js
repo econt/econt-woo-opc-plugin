@@ -18,12 +18,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _wordpress_element__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_wordpress_element__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var _wordpress_data__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @wordpress/data */ "@wordpress/data");
 /* harmony import */ var _wordpress_data__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_wordpress_data__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var _wordpress_i18n__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @wordpress/i18n */ "@wordpress/i18n");
-/* harmony import */ var _wordpress_i18n__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_wordpress_i18n__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var _wordpress_hooks__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @wordpress/hooks */ "@wordpress/hooks");
-/* harmony import */ var _wordpress_hooks__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(_wordpress_hooks__WEBPACK_IMPORTED_MODULE_4__);
-/* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! react-dom */ "react-dom");
-/* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(react_dom__WEBPACK_IMPORTED_MODULE_5__);
+/* harmony import */ var _wordpress_hooks__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @wordpress/hooks */ "@wordpress/hooks");
+/* harmony import */ var _wordpress_hooks__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_wordpress_hooks__WEBPACK_IMPORTED_MODULE_3__);
+/* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! react-dom */ "react-dom");
+/* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(react_dom__WEBPACK_IMPORTED_MODULE_4__);
 "use client";
 
 
@@ -31,21 +29,40 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-
-
-// No TypeScript declarations needed in plain JS
 const EcontDelivery = () => {
+  // Debug mode check - looks for ?econt_debug=1 in URL
+  const isDebugMode = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get("econt_debug") === "1" || urlParams.get("econt_debug") === "true";
+  };
+
+  // Debug logging function
+  const debugLog = (category, message, data = null) => {
+    if (!isDebugMode()) return;
+    const timestamp = new Date().toISOString().split("T")[1].split(".")[0];
+    const prefix = `[ECONT-${category}] ${timestamp}:`;
+    if (data) {
+      console.group(prefix, message);
+      console.log("Data:", data);
+      console.groupEnd();
+    } else {
+      console.log(prefix, message);
+    }
+  };
+
+  // Component instance counter for debugging
+  const instanceId = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useRef)(Math.random().toString(36).substr(2, 9));
+  debugLog("INIT", `EcontDelivery component initializing - Instance: ${instanceId.current}`);
+
   // Declare jQuery and wp variables
   const jQuery = window.jQuery;
   const wp = window.wp;
 
   // Helper function to get translation or fallback to the key
   const getTranslation = key => {
-    // Check if econtTranslations is available and has the key
-    if (typeof window.econtTranslations !== 'undefined' && window.econtTranslations[key]) {
+    if (typeof window.econtTranslations !== "undefined" && window.econtTranslations[key]) {
       return window.econtTranslations[key];
     }
-    // Fallback to the key itself if translation is not available
     return key;
   };
 
@@ -61,12 +78,14 @@ const EcontDelivery = () => {
   const [isEcontSelected, setIsEcontSelected] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useState)(false);
   const [portalContainer, setPortalContainer] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useState)(null);
   const [isOrderButtonDisabled, setIsOrderButtonDisabled] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useState)(false);
-  const [isIframeLoading, setIsIframeLoading] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useState)(true); // New state for iframe loading
+  const [isIframeLoading, setIsIframeLoading] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useState)(true);
 
   // Refs
   const isMountedRef = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useRef)(true);
   const messageListenerRef = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useRef)(null);
   const econtContainerRef = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useRef)(null);
+  const ajaxInProgressRef = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useRef)(false); // Prevent duplicate AJAX requests
+  const lastFormDataRef = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useRef)(null); // Track last form data to prevent duplicates
 
   // Get data from WooCommerce store
   const {
@@ -75,6 +94,7 @@ const EcontDelivery = () => {
     cartData,
     selectedShippingMethod
   } = (0,_wordpress_data__WEBPACK_IMPORTED_MODULE_2__.useSelect)(select => {
+    debugLog("STORE", `useSelect hook called - Instance: ${instanceId.current}`);
     const store = select("wc/store/cart");
     if (!store) {
       return {
@@ -96,10 +116,6 @@ const EcontDelivery = () => {
 
       // Calculate total weight from cart items
       const totalWeight = cartData.itemsWeight * 0.001;
-
-      // console.log("Calculated total weight:", totalWeight)
-
-      // Set minimum weight of 1kg if calculated weight is less
       const finalWeight = totalWeight > 0 ? totalWeight : 1;
       cart = {
         total: Number.parseFloat(cartData.totals?.total_items) / 100 || 0,
@@ -133,22 +149,26 @@ const EcontDelivery = () => {
   const isEcontShippingSelected = () => {
     // First check the local state
     if (localShippingMethod && localShippingMethod.includes("econt")) {
+      debugLog("CHECK", "Econt found in local shipping method", localShippingMethod);
       return true;
     }
 
     // Then check the store state
     if (selectedShippingMethod && (selectedShippingMethod === "delivery_with_econt" || selectedShippingMethod.includes("econt"))) {
+      debugLog("CHECK", "Econt found in selected shipping method", selectedShippingMethod);
       return true;
     }
 
     // Check the DOM directly
     const econtRadio = document.querySelector('input[name^="shipping_method"][value*="econt"]:checked');
     if (econtRadio) {
+      debugLog("CHECK", "Econt radio button found checked in DOM", econtRadio.value);
       return true;
     }
 
     // Check if we have an iframe URL
     if (iframeUrl && iframeUrl.length > 0) {
+      debugLog("CHECK", "Econt detected via iframe URL", iframeUrl);
       return true;
     }
     return false;
@@ -160,9 +180,11 @@ const EcontDelivery = () => {
     for (const selector of selectors) {
       const element = document.querySelector(selector);
       if (element) {
+        debugLog("DOM", `Found shipping container with selector: ${selector}`);
         return element;
       }
     }
+    debugLog("DOM", "No shipping container found");
     return null;
   };
 
@@ -179,21 +201,24 @@ const EcontDelivery = () => {
 
     // If no container exists, create one
     if (!container) {
+      debugLog("PORTAL", "Creating new portal container");
       container = document.createElement("div");
       container.id = "econt-portal-container";
-
       // Insert after the shipping option
       if (targetElement.nextSibling) {
         targetElement.parentNode.insertBefore(container, targetElement.nextSibling);
       } else {
         targetElement.parentNode.appendChild(container);
       }
+    } else {
+      debugLog("PORTAL", "Using existing portal container");
     }
     return container;
   };
 
   // Function to disable/enable the place order button
   const togglePlaceOrderButton = disable => {
+    debugLog("BUTTON", `Toggling place order button - disable: ${disable}`);
     const placeOrderButton = document.querySelector(".wc-block-components-checkout-place-order-button");
     if (placeOrderButton) {
       placeOrderButton.disabled = disable;
@@ -202,26 +227,29 @@ const EcontDelivery = () => {
       if (disable) {
         placeOrderButton.style.opacity = "0.5";
         placeOrderButton.style.cursor = "not-allowed";
-
-        // Add a tooltip to explain why it's disabled
-        placeOrderButton.title = getTranslation('Please complete Econt delivery details first');
+        placeOrderButton.title = getTranslation("Please complete Econt delivery details first");
       } else {
         placeOrderButton.style.opacity = "";
         placeOrderButton.style.cursor = "";
         placeOrderButton.title = "";
       }
-
-      // Always update the state to match the button's disabled status
       setIsOrderButtonDisabled(disable);
     }
   };
 
   // Function to get data from form and make AJAX request
   const getDataFromForm = async () => {
-    if (!isMountedRef.current || !isEcontShippingSelected()) return;
+    debugLog("FORM", `Getting data from form - Instance: ${instanceId.current}`);
+    if (!isMountedRef.current || !isEcontShippingSelected()) {
+      debugLog("FORM", "Component not mounted or Econt not selected, skipping");
+      return;
+    }
 
-    // // Disable the place order button while getting Econt data
-    // togglePlaceOrderButton(true)
+    // Prevent duplicate AJAX requests
+    if (ajaxInProgressRef.current) {
+      debugLog("FORM", "AJAX request already in progress, skipping");
+      return;
+    }
 
     // Wait a moment for fields to be available
     await new Promise(resolve => setTimeout(resolve, 100));
@@ -237,9 +265,11 @@ const EcontDelivery = () => {
       phone: document.querySelector("#shipping-phone")?.value || document.querySelector("#billing-phone")?.value || "",
       email: document.querySelector("#email")?.value || document.querySelector("#shipping-email")?.value || document.querySelector("#billing-email")?.value || ""
     };
+    debugLog("FORM", "Customer data extracted", customerData);
 
     // Check if we have enough data
     if (!customerData.first_name || !customerData.city) {
+      debugLog("FORM", "Insufficient customer data, retrying in 1 second");
       if (isMountedRef.current) {
         setTimeout(getDataFromForm, 1000);
       }
@@ -277,15 +307,26 @@ const EcontDelivery = () => {
     Object.keys(params).forEach(key => {
       if (!params[key]) delete params[key];
     });
+
+    // Add cart data
+    const cartParams = {
+      ...params,
+      order_total: cartData.total || 0,
+      order_currency: cartData.currency || "BGN",
+      pack_count: 1,
+      order_weight: cartData.weight
+    };
+
+    // Check if this is the same as the last request to prevent duplicates
+    const formDataString = JSON.stringify(cartParams);
+    if (lastFormDataRef.current === formDataString) {
+      debugLog("FORM", "Same form data as last request, skipping AJAX");
+      return;
+    }
+    lastFormDataRef.current = formDataString;
+    ajaxInProgressRef.current = true;
     try {
-      // Add cart data
-      const cartParams = {
-        ...params,
-        order_total: cartData.total || 0,
-        order_currency: cartData.currency || "BGN",
-        pack_count: 1,
-        order_weight: cartData.weight
-      };
+      debugLog("AJAX", "Making AJAX request", cartParams);
 
       // Make AJAX request
       if (typeof jQuery !== "undefined") {
@@ -301,8 +342,9 @@ const EcontDelivery = () => {
             params: cartParams
           }
         });
+        debugLog("AJAX", "AJAX response received", response);
         if (!response) {
-          // If no response, keep the button disabled
+          debugLog("AJAX", "No response received");
           return;
         }
 
@@ -313,7 +355,7 @@ const EcontDelivery = () => {
         } else if (typeof response === "object") {
           url = response.toString();
         } else {
-          // If invalid response, keep the button disabled
+          debugLog("AJAX", "Invalid response type");
           return;
         }
 
@@ -321,30 +363,39 @@ const EcontDelivery = () => {
         const locale = document.documentElement.lang.split("-")[0] || "en";
         const validLocales = ["bg", "en", "gr", "ro"];
         const fullUrl = `${url}&module=onecheckout&lang=${validLocales.includes(locale) ? locale : "bg"}`;
+        debugLog("AJAX", "Final URL constructed", fullUrl);
 
-        // Update iframe with URL
-        updateIframeWithUrl(fullUrl, true);
+        // Update iframe with URL only if it's different
+        if (fullUrl !== iframeUrl) {
+          updateIframeWithUrl(fullUrl, true);
+        } else {
+          debugLog("IFRAME", "URL unchanged, skipping iframe update");
+          setIsIframeLoading(false);
+        }
       }
     } catch (error) {
-      // Set loading to false if there's an error
+      debugLog("AJAX", "AJAX request failed", error);
       setIsIframeLoading(false);
-      // Silently fail, but keep the button disabled
+    } finally {
+      ajaxInProgressRef.current = false;
     }
   };
 
   // Function to update iframe URL and visibility
   const updateIframeWithUrl = (url, isVisible = true) => {
+    debugLog("IFRAME", `Updating iframe with URL: ${url}, visible: ${isVisible}`);
     if (!isMountedRef.current) return;
 
     // Update state
     setIframeUrl(url);
-    setIsIframeLoading(true); // Set loading to true when updating iframe URL
+    setIsIframeLoading(true);
 
     // Apply URL to iframe element
     setTimeout(() => {
       if (!isMountedRef.current) return;
       const iframe = document.querySelector("#delivery_with_econt_iframe");
       if (iframe) {
+        debugLog("IFRAME", "Iframe element found, setting src");
         iframe.src = url;
         if (isVisible) {
           iframe.style.display = "block";
@@ -354,17 +405,14 @@ const EcontDelivery = () => {
 
         // Add load event listener
         iframe.onload = () => {
+          debugLog("IFRAME", "Iframe loaded successfully");
           try {
-            // This will throw an error if cross-origin
             const iframeDocument = iframe.contentDocument || iframe.contentWindow?.document;
-
-            // Set loading to false when iframe is loaded
             if (isMountedRef.current) {
               setIsIframeLoading(false);
             }
           } catch (error) {
-            // For cross-origin iframes, we can't access the document
-            // but we can still know it loaded
+            debugLog("IFRAME", "Cross-origin iframe loaded (expected)", error.message);
             if (isMountedRef.current) {
               setIsIframeLoading(false);
             }
@@ -373,18 +421,13 @@ const EcontDelivery = () => {
 
         // Add error event listener
         iframe.onerror = () => {
+          debugLog("IFRAME", "Iframe failed to load");
           if (isMountedRef.current) {
-            setIsIframeLoading(false); // Set loading to false on error
-            setTimeout(() => {
-              if (isMountedRef.current && iframe) {
-                iframe.src = url;
-                setIsIframeLoading(true); // Set loading back to true when retrying
-              }
-            }, 1000);
+            setIsIframeLoading(false);
           }
         };
       } else if (isMountedRef.current) {
-        // Try to update portal container and retry
+        debugLog("IFRAME", "Iframe element not found, creating portal container and retrying");
         const container = createPortalContainerAfterShippingOption();
         if (container) {
           setPortalContainer(container);
@@ -406,6 +449,7 @@ const EcontDelivery = () => {
     if (data.shipment_error || data.shipping_price == null || isNaN(Number(data.shipping_price)) || !data.name) {
       return;
     }
+    debugLog("MESSAGE", "Processing valid shipment data", data);
     try {
       // Set cookie for shipping price
       document.cookie = `econt_shippment_price=${data.shipping_price}; path=/`;
@@ -441,9 +485,7 @@ const EcontDelivery = () => {
         // Trigger checkout update and close iframe
         wp.data.dispatch("wc/store/cart").invalidateResolutionForStoreSelector("getCartData");
         setIsEditing(false);
-
-        // Enable the place order button now that we have shipping data
-        togglePlaceOrderButton(false); // Use the function to ensure state is updated too
+        togglePlaceOrderButton(false);
 
         // Wait for checkout to update
         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -453,7 +495,7 @@ const EcontDelivery = () => {
           first_name: data.face ? data.face.split(" ")[0] : data.name.split(" ")[0],
           last_name: data.face ? data.face.split(" ")[1] : data.name.split(" ")[1],
           company: data.face ? data.name : "",
-          address_1: data.address ? `${getTranslation('Delivery to address:')} ${data.address}` : `${getTranslation('Delivery to office:')} ${data.office_name_only}`,
+          address_1: data.address ? `${getTranslation("Delivery to address:")} ${data.address}` : `${getTranslation("Delivery to office:")} ${data.office_name_only}`,
           city: data.city_name,
           postcode: data.post_code,
           phone: data.phone,
@@ -469,44 +511,40 @@ const EcontDelivery = () => {
             await dispatch.setShippingAddress(addressData);
           } else {
             // Direct field updates
-            updateFormFields(addressData);
+            const fields = ["first_name", "last_name", "company", "address_1", "city", "postcode", "phone", "email"];
+            fields.forEach(field => {
+              if (typeof jQuery !== "undefined") {
+                jQuery(`#shipping-${field}`).val(addressData[field]);
+                jQuery(`#billing-${field}`).val(addressData[field]);
+              }
+            });
           }
         } catch (error) {
           // Fallback to direct field updates
-          updateFormFields(addressData);
+          const fields = ["first_name", "last_name", "company", "address_1", "city", "postcode", "phone", "email"];
+          fields.forEach(field => {
+            if (typeof jQuery !== "undefined") {
+              jQuery(`#shipping-${field}`).val(addressData[field]);
+              jQuery(`#billing-${field}`).val(addressData[field]);
+            }
+          });
         }
-
-        // Trigger checkout update and close iframe
-        wp.data.dispatch("wc/store/cart").invalidateResolutionForStoreSelector("getCartData");
         setIsEditing(false);
-        setIsIframeLoading(false); // Ensure loading is false when editing is done
-
-        // Enable the place order button now that we have shipping dat
+        setIsIframeLoading(false);
         togglePlaceOrderButton(false);
       }
     } catch (error) {
-      // Close iframe even if there's an error
+      debugLog("MESSAGE", "Error processing message", error);
       setIsEditing(false);
-      setIsIframeLoading(false); // Ensure loading is false on error
-
-      // Keep the button disabled if there was an error
-      togglePlaceOrderButton(true); // Use the function to ensure state is updated too
+      setIsIframeLoading(false);
+      togglePlaceOrderButton(true);
     }
-  };
-
-  // Helper function to update form fields directly
-  const updateFormFields = addressData => {
-    const fields = ["first_name", "last_name", "company", "address_1", "city", "postcode", "phone", "email"];
-    fields.forEach(field => {
-      if (typeof jQuery !== "undefined") {
-        jQuery(`#shipping-${field}`).val(addressData[field]);
-        jQuery(`#billing-${field}`).val(addressData[field]);
-      }
-    });
   };
 
   // Effect to check shipping method changes and update component state
   (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useEffect)(() => {
+    debugLog("EFFECT", `Shipping method check effect triggered - Instance: ${instanceId.current}`);
+
     // Check if shipping method has changed
     const checkShippingMethod = () => {
       const isEcont = isEcontShippingSelected();
@@ -514,9 +552,14 @@ const EcontDelivery = () => {
 
       // Update local shipping method if store method changes
       if (selectedShippingMethod && selectedShippingMethod !== localShippingMethod) {
+        debugLog("EFFECT", "Updating local shipping method", {
+          old: localShippingMethod,
+          new: selectedShippingMethod
+        });
         setLocalShippingMethod(selectedShippingMethod);
       }
       if (isEcont) {
+        debugLog("EFFECT", "Econt is selected, setting up portal and getting form data");
         // Create portal container if needed
         const container = createPortalContainerAfterShippingOption();
         if (container) {
@@ -526,16 +569,13 @@ const EcontDelivery = () => {
         // Set editing mode if needed
         if (!iframeUrl) {
           setIsEditing(true);
-          // Disable place order button until shipping data is received
           togglePlaceOrderButton(true);
         }
-        // Disable the place order button while getting Econt data
-        // togglePlaceOrderButton(true)
         getDataFromForm();
       } else {
-        // If Econt is not selected, make sure the button is enabled
+        debugLog("EFFECT", "Econt not selected, enabling place order button");
         togglePlaceOrderButton(false);
-        setIsIframeLoading(false); // Reset loading state when Econt is not selected
+        setIsIframeLoading(false);
       }
     };
 
@@ -544,17 +584,20 @@ const EcontDelivery = () => {
 
     // Set up event listener for shipping method changes
     const handleShippingMethodChange = () => {
+      debugLog("EVENT", "Shipping method change event triggered");
       checkShippingMethod();
     };
 
     // Add event listeners for shipping method changes
     if (typeof jQuery !== "undefined") {
+      debugLog("EVENT", "Adding jQuery event listeners");
       jQuery(document.body).on("updated_checkout", handleShippingMethodChange);
       jQuery('input[name^="shipping_method"]').on("change", handleShippingMethodChange);
     }
 
     // Clean up event listeners
     return () => {
+      debugLog("EVENT", "Cleaning up shipping method event listeners");
       if (typeof jQuery !== "undefined") {
         jQuery(document.body).off("updated_checkout", handleShippingMethodChange);
         jQuery('input[name^="shipping_method"]').off("change", handleShippingMethodChange);
@@ -569,7 +612,6 @@ const EcontDelivery = () => {
       if (container) {
         setPortalContainer(container);
       }
-
       // If Econt is selected but we don't have shipping data yet, disable the button
       if (isEditing && !globalShipmentPrices.no_cod) {
         togglePlaceOrderButton(true);
@@ -582,9 +624,11 @@ const EcontDelivery = () => {
 
   // Effect to set up message event listener
   (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useEffect)(() => {
+    debugLog("EFFECT", `Setting up message event listener - Instance: ${instanceId.current}`);
     messageListenerRef.current = handleIframeMessage;
     window.addEventListener("message", handleIframeMessage);
     return () => {
+      debugLog("EFFECT", `Cleaning up message event listener - Instance: ${instanceId.current}`);
       window.removeEventListener("message", handleIframeMessage);
       messageListenerRef.current = null;
     };
@@ -593,6 +637,7 @@ const EcontDelivery = () => {
   // Effect to clean up on unmount
   (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useEffect)(() => {
     return () => {
+      debugLog("CLEANUP", `Component unmounting - Instance: ${instanceId.current}`);
       isMountedRef.current = false;
 
       // Clean up any event listeners
@@ -640,13 +685,19 @@ const EcontDelivery = () => {
   }, [isEcontSelected, isEditing, globalShipmentPrices]);
 
   // Prepare section title and button text
-  const defaultSectionTitleText = getTranslation('Econt Delivery Details');
-  const defaultEditButtonText = getTranslation('Edit delivery details');
-  const sectionTitleText = (0,_wordpress_hooks__WEBPACK_IMPORTED_MODULE_4__.applyFilters)("econtDelivery.editButtonText", defaultSectionTitleText);
-  const editButtonText = (0,_wordpress_hooks__WEBPACK_IMPORTED_MODULE_4__.applyFilters)("econtDelivery.checkoutButtonText", defaultEditButtonText);
+  const defaultSectionTitleText = getTranslation("Econt Delivery Details");
+  const defaultEditButtonText = getTranslation("Edit delivery details");
+  const sectionTitleText = (0,_wordpress_hooks__WEBPACK_IMPORTED_MODULE_3__.applyFilters)("econtDelivery.editButtonText", defaultSectionTitleText);
+  const editButtonText = (0,_wordpress_hooks__WEBPACK_IMPORTED_MODULE_3__.applyFilters)("econtDelivery.checkoutButtonText", defaultEditButtonText);
 
   // Render component content
   const renderContent = () => {
+    debugLog("RENDER", `Rendering component content - Instance: ${instanceId.current}`, {
+      isEcontSelected,
+      isEditing,
+      isIframeLoading,
+      iframeUrl: iframeUrl ? "present" : "empty"
+    });
     return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
       className: "econt-content-wrapper",
       style: {
@@ -686,7 +737,7 @@ const EcontDelivery = () => {
         borderTop: "4px solid #3498db",
         animation: "econt-spin 1s linear infinite"
       }
-    })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, getTranslation('Loading Econt delivery options...')), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("style", null, `
+    })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, getTranslation("Loading Econt delivery options...")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("style", null, `
                                 @keyframes econt-spin {
                                     0% { transform: rotate(0deg); }
                                     100% { transform: rotate(360deg); }
@@ -703,13 +754,14 @@ const EcontDelivery = () => {
         visibility: isEcontSelected && isEditing && iframeUrl && !isIframeLoading ? "visible" : "hidden"
       },
       onLoad: () => {
+        debugLog("IFRAME", "Iframe onLoad event triggered");
         if (!iframeUrl) return;
         const iframe = document.getElementById("delivery_with_econt_iframe");
         if (iframe && isEcontSelected && isEditing) {
-          // Set loading to false when iframe is loaded
           setIsIframeLoading(false);
           iframe.style.display = "block";
           iframe.style.visibility = "visible";
+          debugLog("IFRAME", "Iframe made visible after load");
         }
       }
     })), isEcontSelected && !isEditing && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
@@ -721,10 +773,9 @@ const EcontDelivery = () => {
         marginBottom: "40px"
       },
       onClick: () => {
+        debugLog("BUTTON", "Edit button clicked");
         setIsEditing(true);
-        setIsIframeLoading(true); // Set loading when edit button is clicked
-
-        // Disable place order button when editing
+        setIsIframeLoading(true);
         togglePlaceOrderButton(true);
         if (isEcontSelected && !iframeUrl) {
           getDataFromForm();
@@ -741,12 +792,13 @@ const EcontDelivery = () => {
         fontSize: "14px",
         textAlign: "center"
       }
-    }, getTranslation('Please complete Econt delivery details before placing your order')));
+    }, getTranslation("Please complete Econt delivery details before placing your order")));
   };
 
   // If we have a portal container and Econt is selected, render through portal
   if (portalContainer && isEcontSelected) {
-    return (0,react_dom__WEBPACK_IMPORTED_MODULE_5__.createPortal)((0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    debugLog("RENDER", `Rendering through portal - Instance: ${instanceId.current}`);
+    return (0,react_dom__WEBPACK_IMPORTED_MODULE_4__.createPortal)((0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
       ref: econtContainerRef,
       className: "wp-block-econt-delivery",
       style: {
@@ -761,11 +813,13 @@ const EcontDelivery = () => {
       "data-econt-component": "true",
       "data-econt-shipping-selected": "true",
       "data-econt-iframe-url": iframeUrl ? "loaded" : "not-loaded",
-      "data-econt-iframe-loading": isIframeLoading ? "true" : "false"
+      "data-econt-iframe-loading": isIframeLoading ? "true" : "false",
+      "data-econt-instance": instanceId.current
     }, renderContent()), portalContainer);
   }
 
   // Fallback render method if portal is not available
+  debugLog("RENDER", `Rendering fallback (no portal) - Instance: ${instanceId.current}`);
   return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     ref: econtContainerRef,
     className: "wp-block-econt-delivery",
@@ -779,7 +833,8 @@ const EcontDelivery = () => {
     "data-econt-component": "true",
     "data-econt-shipping-selected": isEcontSelected ? "true" : "false",
     "data-econt-iframe-url": iframeUrl ? "loaded" : "not-loaded",
-    "data-econt-iframe-loading": isIframeLoading ? "true" : "false"
+    "data-econt-iframe-loading": isIframeLoading ? "true" : "false",
+    "data-econt-instance": instanceId.current
   }, renderContent());
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (EcontDelivery);
