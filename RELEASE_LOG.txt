@@ -1,3 +1,4 @@
+Version 2.0.5 - 17.07.2025 - Block checkout - Fix cookie store customer id; Additional delay and check to fill out billing and shipping address fields after Econt form is submit;
 Version 2.0.4 - 14.07.2025 - Block checkout - Add console log function to debug with get parameter ?econt_debug=1. Fix multiple iframe initialization;
 Version 2.0.3 - 13.07.2025 - Block checkout - Bind checkout initialisation scripts to init_checkout instead of jQuery.ready or updated_checkout.
 Version 2.0.2 - 08.07.2025 - Bind initial load of iframe to update_checkout

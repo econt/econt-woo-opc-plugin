@@ -453,6 +453,7 @@ const EcontDelivery = () => {
     try {
       // Set cookie for shipping price
       document.cookie = `econt_shippment_price=${data.shipping_price}; path=/`;
+      document.cookie = `econt_customer_info_id=${data.id}; path=/`;
 
       // Update shipping rate via AJAX
       if (typeof jQuery !== "undefined") {
@@ -485,7 +486,9 @@ const EcontDelivery = () => {
         // Trigger checkout update and close iframe
         wp.data.dispatch("wc/store/cart").invalidateResolutionForStoreSelector("getCartData");
         setIsEditing(false);
-        togglePlaceOrderButton(false);
+
+        // Keep button disabled while updating
+        togglePlaceOrderButton(true);
 
         // Wait for checkout to update
         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -502,36 +505,24 @@ const EcontDelivery = () => {
           email: data.email
         };
 
-        // Update addresses using WooCommerce's store API or direct field updates
-        try {
-          const store = wp.data.select("wc/store/cart");
-          const dispatch = wp.data.dispatch("wc/store/cart");
-          if (store && dispatch) {
-            await dispatch.setBillingAddress(addressData);
-            await dispatch.setShippingAddress(addressData);
-          } else {
-            // Direct field updates
-            const fields = ["first_name", "last_name", "company", "address_1", "city", "postcode", "phone", "email"];
-            fields.forEach(field => {
-              if (typeof jQuery !== "undefined") {
-                jQuery(`#shipping-${field}`).val(addressData[field]);
-                jQuery(`#billing-${field}`).val(addressData[field]);
-              }
-            });
-          }
-        } catch (error) {
-          // Fallback to direct field updates
-          const fields = ["first_name", "last_name", "company", "address_1", "city", "postcode", "phone", "email"];
-          fields.forEach(field => {
-            if (typeof jQuery !== "undefined") {
-              jQuery(`#shipping-${field}`).val(addressData[field]);
-              jQuery(`#billing-${field}`).val(addressData[field]);
-            }
-          });
+        // Update addresses and wait for completion
+        await updateAddressFields(addressData);
+
+        // Verify fields are actually updated before enabling button
+        const fieldsUpdated = await verifyFieldsUpdated(addressData);
+        if (fieldsUpdated) {
+          // Wait a bit more for any form validation to complete
+          await new Promise(resolve => setTimeout(resolve, 500));
+
+          // Enable submit button only after verification
+          togglePlaceOrderButton(false);
+          debugLog("MESSAGE", "All fields updated successfully, submit button enabled");
+        } else {
+          debugLog("MESSAGE", "Field update verification failed, keeping button disabled");
+          togglePlaceOrderButton(true);
         }
         setIsEditing(false);
         setIsIframeLoading(false);
-        togglePlaceOrderButton(false);
       }
     } catch (error) {
       debugLog("MESSAGE", "Error processing message", error);
@@ -539,6 +530,87 @@ const EcontDelivery = () => {
       setIsIframeLoading(false);
       togglePlaceOrderButton(true);
     }
+  };
+
+  // Helper function to update address fields with proper error handling
+  const updateAddressFields = async addressData => {
+    try {
+      const store = wp.data.select("wc/store/cart");
+      const dispatch = wp.data.dispatch("wc/store/cart");
+      if (store && dispatch) {
+        await dispatch.setBillingAddress(addressData);
+        await dispatch.setShippingAddress(addressData);
+
+        // Wait for store to update
+        await new Promise(resolve => setTimeout(resolve, 300));
+      } else {
+        // Direct field updates with jQuery
+        updateFieldsDirectly(addressData);
+      }
+    } catch (error) {
+      debugLog("MESSAGE", "WooCommerce store update failed, falling back to direct field updates", error);
+      // Fallback to direct field updates
+      updateFieldsDirectly(addressData);
+    }
+  };
+
+  // Helper function for direct field updates
+  const updateFieldsDirectly = addressData => {
+    if (typeof jQuery !== "undefined") {
+      const fields = ["first_name", "last_name", "company", "address_1", "city", "postcode", "phone", "email"];
+      fields.forEach(field => {
+        const shippingField = jQuery(`#shipping-${field}`);
+        const billingField = jQuery(`#billing-${field}`);
+        if (shippingField.length) {
+          shippingField.val(addressData[field]).trigger('change');
+        }
+        if (billingField.length) {
+          billingField.val(addressData[field]).trigger('change');
+        }
+      });
+
+      // Trigger form validation
+      jQuery(document.body).trigger('update_checkout');
+    }
+  };
+
+  // Helper function to verify fields are actually updated
+  const verifyFieldsUpdated = async expectedData => {
+    if (typeof jQuery === "undefined") {
+      return false;
+    }
+    const fields = ["first_name", "last_name", "company", "address_1", "city", "postcode", "phone", "email"];
+    let allFieldsUpdated = true;
+
+    // Check multiple times with delays to account for async updates
+    for (let attempt = 0; attempt < 3; attempt++) {
+      allFieldsUpdated = true;
+      for (const field of fields) {
+        const shippingField = jQuery(`#shipping-${field}`);
+        const billingField = jQuery(`#billing-${field}`);
+        const shippingValue = shippingField.length ? shippingField.val() : null;
+        const billingValue = billingField.length ? billingField.val() : null;
+        const expectedValue = expectedData[field] || "";
+
+        // Check if at least one field (shipping or billing) has the expected value
+        if (shippingField.length || billingField.length) {
+          if (shippingValue !== expectedValue && billingValue !== expectedValue) {
+            debugLog("MESSAGE", `Field ${field} not updated. Expected: ${expectedValue}, Got shipping: ${shippingValue}, billing: ${billingValue}`);
+            allFieldsUpdated = false;
+            break;
+          }
+        }
+      }
+      if (allFieldsUpdated) {
+        debugLog("MESSAGE", "All fields verified as updated");
+        return true;
+      }
+
+      // Wait before next attempt
+      await new Promise(resolve => setTimeout(resolve, 200));
+    }
+    debugLog("MESSAGE", "Field verification failed after 3 attempts");
+    return false;
   };
 
   // Effect to check shipping method changes and update component state
