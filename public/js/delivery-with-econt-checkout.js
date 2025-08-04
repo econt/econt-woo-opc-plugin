@@ -6,6 +6,17 @@ jQuery(document).ready(function($){
 	let use_shipping = false;
 	var globalAlertMessage = false;
 
+	// Helper function to get custom selectors from window object
+	function getCustomSelectors() {
+		return window.econtCustomSelectors || {
+			customerDetails: '#customer_details',
+			shippingOptions: ['#shipping-option', '.wc-block-components-shipping-rates-control', '.shipping_method', '.woocommerce-shipping-methods', '#shipping_method'],
+			placeOrderButton: ['#place_order', '.wc-block-components-checkout-place-order-button'],
+			additionalFields: '.woocommerce-additional-fields',
+			checkoutForm: ['form[name="checkout"]', 'form.woocommerce-checkout']
+		};
+	}
+
 	// Initialize shipping method toggle
 	function initializeShippingMethodToggle() {
 		// Check initial shipping method and set appropriate display
@@ -19,23 +30,26 @@ jQuery(document).ready(function($){
 		// });
 
 		// Initial binding
-		bindShippingMethodChangeEvents();
+		// bindShippingMethodChangeEvents();
 	}
 
 	// Toggle between Econt iframe and default WooCommerce fields
 	function toggleFieldsBasedOnShippingMethod() {
+		const customSelectors = getCustomSelectors();
+		const customerDetailsElement = $(customSelectors.customerDetails);
+
 		if (checkIfShippingMethodIsEcont()) {
 			// Hide default WooCommerce fields when Econt is selected
-			$("#customer_details").hide();
+			customerDetailsElement.hide();
 
 			// Move additional fields if they exist
-			if ($("#customer_details .woocommerce-additional-fields").length) {
-				$("#customer_details .woocommerce-additional-fields").prependTo($("#customer_details").parent());
+			if (customerDetailsElement.find('.woocommerce-additional-fields').length) {
+				customerDetailsElement.find('.woocommerce-additional-fields').prependTo(customerDetailsElement.parent());
 			}
 
 			// Create iframe container if it doesn't exist
 			if ($("#place_iframe_here").length === 0) {
-				$("#customer_details").after($("<div class='col2-set' style='display: block;' id='place_iframe_here'></div>"));
+				customerDetailsElement.after($("<div class='col2-set' style='display: block;' id='place_iframe_here'></div>"));
 			} else {
 				$("#place_iframe_here").show();
 			}
@@ -44,14 +58,14 @@ jQuery(document).ready(function($){
 			getDataFromForm(use_shipping).then();
 		} else {
 			// Show default WooCommerce fields for other shipping methods
-			$("#customer_details").show();
+			customerDetailsElement.show();
 
 			// Hide Econt iframe container
 			$("#place_iframe_here").hide();
 
 			// Move additional fields back if needed
-			if ($(".woocommerce-additional-fields").length && !$("#customer_details .woocommerce-additional-fields").length) {
-				$(".woocommerce-additional-fields").appendTo($("#customer_details"));
+			if ($(".woocommerce-additional-fields").length && !customerDetailsElement.find('.woocommerce-additional-fields').length) {
+				$(".woocommerce-additional-fields").appendTo(customerDetailsElement);
 			}
 		}
 	}
@@ -311,6 +325,13 @@ jQuery(document).ready(function($){
 	$(document.body).on('init_checkout', function() {
 		console.log('init checkout')
 		initializeShippingMethodToggle();
+	});
+
+	// Use event delegation instead - fallback of bindShippingMethodChangeEvents()
+	$(document).on('change.econtToggle', 'input[name^="shipping_method"]', function() {
+		resetCookies();
+		toggleFieldsBasedOnShippingMethod();
+		$('body').trigger('update_checkout');
 	});
 
 	// Reset cookies on page load

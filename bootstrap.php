@@ -175,13 +175,34 @@ function delivery_with_econt_render_form_modal($checkout) {
 	Delivery_With_Econt_Shipping::render_form_modal($checkout);
 }
 
-add_action('woocommerce_before_checkout_form', 'delivery_with_econt_enque_scripts_and_styles');
+add_action('wp_enqueue_scripts', 'delivery_with_econt_enque_scripts_and_styles');
 
 function delivery_with_econt_enque_scripts_and_styles() {
+
+	// Get custom selectors from options
+	$options = get_option('delivery_with_econt_settings', array());
+
+	// Prepare custom selectors object
+	$custom_selectors = array(
+		'customerDetails' => !empty($options['customer_details_selector'])
+			? $options['customer_details_selector']
+			: '#customer_details',
+	);
+
+
 	wp_enqueue_style('delivery_with_econt_calculate_shipping', plugin_dir_url(__FILE__) . 'public/css/delivery-with-econt-checkout.css', [], false);
 	wp_enqueue_script('delivery_with_econt_calculate_shipping', plugin_dir_url(__FILE__) . 'public/js/delivery-with-econt-checkout.js', ['jquery'], false, true);
 	//wp_localize_script( 'delivery_with_econt_calculate_shipping', 'delivery_with_econt_calculate_shipping_object', array('ajax_url' => admin_url('admin-ajax.php'), 'security'  => wp_create_nonce( 'delivery-with-econt-security-nonce' )));
 	wp_localize_script('delivery_with_econt_calculate_shipping', 'delivery_with_econt_calculate_shipping_object', ['delivery_url' => Delivery_With_Econt_Shipping::get_delivery_url(), 'ajax_url' => admin_url('admin-ajax.php'), 'security' => wp_create_nonce('delivery-with-econt-security-nonce')]);
+
+// Output custom selectors to JavaScript
+	wp_localize_script('delivery_with_econt_calculate_shipping', 'econtCustomSelectors', $custom_selectors);
+
+	// Also make it available globally for React components
+	wp_add_inline_script('delivery_with_econt_calculate_shipping',
+		'window.econtCustomSelectors = ' . wp_json_encode($custom_selectors) . ';',
+		'before'
+	);
 }
 
 // End Woocommerce stuff

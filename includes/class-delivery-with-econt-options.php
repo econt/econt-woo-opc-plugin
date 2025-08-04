@@ -106,7 +106,15 @@ class Delivery_With_Econt_Options
             array($this, 'demo_checkbox_callback'),
             'delivery-with-econt-settings',
             'setting_section_id'
-        );  
+        );
+
+	    add_settings_field(
+		    'customer_details_selector',
+		    __('Customer Details Container', 'deliver-with-econt'),
+		    array($this, 'customer_details_selector_callback'),
+		    'delivery-with-econt-settings',
+		    'setting_section_id'
+	    );
     }
 
     /**
@@ -120,6 +128,10 @@ class Delivery_With_Econt_Options
         if (isset($input['store_id'])) $new_input['store_id'] = absint($input['store_id']);
         if (isset($input['private_key'])) $new_input['private_key'] = sanitize_text_field($input['private_key']);
         if (isset($input['demo_service'])) $new_input['demo_service'] = absint($input['demo_service']);
+
+	    if (isset($input['customer_details_selector'])) {
+		    $new_input['customer_details_selector'] = sanitize_text_field($input['customer_details_selector']);
+	    }
 
         if ($input['private_key'] != $this->options['private_key']) {
             Delivery_With_Econt_Helper::sendLog('activate', 'activated', (intval($new_input['demo_service']) <= 0 ? self::REAL_URL : self::DEMO_URL), $new_input['private_key']);
@@ -166,6 +178,18 @@ class Delivery_With_Econt_Options
             checked(1, $this->options['demo_service'], false)
         );
     }
+
+	/**
+	 * Customer Details Selector callback
+	 */
+	public function customer_details_selector_callback()
+	{
+		printf(
+			'<input type="text" id="customer_details_selector" name="delivery_with_econt_settings[customer_details_selector]" value="%s" placeholder="#customer_details" style="width: 300px;" /><br><small>%s</small>',
+			isset( $this->options['customer_details_selector'] ) ? esc_attr( $this->options['customer_details_selector']) : '',
+			__('CSS selector for the main customer details container (billing/shipping fields)', 'deliver-with-econt')
+		);
+	}
 
     /**
      * Econt tracking service
