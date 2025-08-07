@@ -12,7 +12,7 @@
  * Plugin Name:       Econt Delivery OneCheckout
  * Plugin URI:        https://econt.com/developers/
  * Description:       Econt Shipping Module
- * Version:           2.0.7
+ * Version:           2.0.8
  * Author:            Econt Express LTD.
  * Author URI:        https://econt.com/developers/
  * License:           GPL-2.0+

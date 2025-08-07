@@ -458,6 +458,97 @@ const EcontDelivery = () => {
         }, 100)
     }
 
+    // Enhanced version of your existing updateAddressFields function
+    const updateAddressFields = async (addressData) => {
+        try {
+            const store = wp.data.select("wc/store/cart")
+            const dispatch = wp.data.dispatch("wc/store/cart")
+
+            if (store && dispatch) {
+                await dispatch.setBillingAddress(addressData)
+                await dispatch.setShippingAddress(addressData)
+
+                // Wait for store to update
+                await new Promise((resolve) => setTimeout(resolve, 300))
+            } else {
+                // Enhanced direct field updates with better compatibility
+                updateFieldsDirectly(addressData)
+            }
+        } catch (error) {
+            debugLog("MESSAGE", "WooCommerce store update failed, falling back to direct field updates", error)
+            // Enhanced fallback to direct field updates
+            updateFieldsDirectly(addressData)
+        }
+    }
+
+// Enhanced version of your existing updateFieldsDirectly function
+    const updateFieldsDirectly = (addressData) => {
+        console.log('updateFieldsDirectly')
+        console.log(typeof jQuery !== "undefined")
+        if (typeof jQuery !== "undefined") {
+            const fields = ["first_name", "last_name", "company", "address_1", "city", "postcode", "phone", "email"]
+            console.log('123')
+
+            fields.forEach((field) => {
+                console.log('foreach')
+
+                const value = addressData[field] || ""
+
+                // Your original selectors plus additional ones for better compatibility
+                const selectors = [
+                    `#shipping-${field}`,
+                    `#billing-${field}`,
+                    // Additional selectors for better field detection
+                    `input[name="shipping_${field}"]`,
+                    `input[name="billing_${field}"]`,
+                    `input[name="${field}"]`,
+                    `[data-field="${field}"]`,
+                    `.wc-block-components-text-input[name*="${field}"]`,
+                    `input[id*="${field}"]`
+                ]
+
+                let fieldUpdated = false
+
+                selectors.forEach(selector => {
+                    console.log('selectors foreach')
+
+                    const $field = jQuery(selector)
+                    if ($field.length > 0) {
+                        const oldValue = $field.val()
+                        $field.val(value)
+
+                        // Enhanced event triggering for React compatibility
+                        $field
+                            .trigger('input')
+                            .trigger('change')
+                            .trigger('blur')
+                        console.log($field.val())
+                        // Also try native events for React controlled components
+                        const element = $field[0]
+                        if (element) {
+                            const inputEvent = new Event('input', { bubbles: true })
+                            const changeEvent = new Event('change', { bubbles: true })
+                            element.dispatchEvent(inputEvent)
+                            element.dispatchEvent(changeEvent)
+                        }
+
+                        if (value !== oldValue) {
+                            fieldUpdated = true
+                            debugLog("UPDATE", `Updated ${selector}: "${oldValue}" -> "${value}"`)
+                        }
+                    }
+                })
+
+                if (!fieldUpdated && value) {
+                    debugLog("UPDATE", `Warning: Could not update field ${field} with value "${value}"`)
+                }
+            })
+
+            // Trigger form validation - keep your original approach
+            jQuery(document.body).trigger('update_checkout')
+        }
+    }
+
     // Handle postMessage events from iframe
     const handleIframeMessage = async (event) => {
         const data = event.data
@@ -527,22 +618,26 @@ const EcontDelivery = () => {
                     email: data.email,
                 }
 
-                // Update addresses and wait for completion
-                await updateAddressFields(addressData)
+                for (let retry = 0; retry < 2; retry++) {
+                    debugLog("MESSAGE", `Address update attempt ${retry + 1}/2`)
 
-                // Verify fields are actually updated before enabling button
-                const fieldsUpdated = await verifyFieldsUpdated(addressData)
+                    // Update addresses using enhanced functions
+                    await updateAddressFields(addressData)
 
-                if (fieldsUpdated) {
-                    // Wait a bit more for any form validation to complete
-                    await new Promise((resolve) => setTimeout(resolve, 500))
+                    // Enhanced verification
+                    const fieldsUpdated = await verifyFieldsUpdated(addressData)
 
-                    // Enable submit button only after verification
-                    togglePlaceOrderButton(false)
-                    debugLog("MESSAGE", "All fields updated successfully, submit button enabled")
-                } else {
-                    debugLog("MESSAGE", "Field update verification failed, keeping button disabled")
-                    togglePlaceOrderButton(true)
+                    if (fieldsUpdated) {
+                        // Wait a bit more for any form validation to complete
+                        await new Promise((resolve) => setTimeout(resolve, 500))
+
+                        // Enable submit button only after verification
+                        togglePlaceOrderButton(false)
+                        debugLog("MESSAGE", "All fields updated successfully, submit button enabled")
+                    } else {
+                        debugLog("MESSAGE", "Field update verification failed, keeping button disabled")
+                        togglePlaceOrderButton(true)
+                    }
                 }
 
                 setIsEditing(false)
@@ -556,50 +651,7 @@ const EcontDelivery = () => {
         }
     }
 
-// Helper function to update address fields with proper error handling
-    const updateAddressFields = async (addressData) => {
-        try {
-            const store = wp.data.select("wc/store/cart")
-            const dispatch = wp.data.dispatch("wc/store/cart")
 
-            if (store && dispatch) {
-                await dispatch.setBillingAddress(addressData)
-                await dispatch.setShippingAddress(addressData)
-
-                // Wait for store to update
-                await new Promise((resolve) => setTimeout(resolve, 300))
-            } else {
-                // Direct field updates with jQuery
-                updateFieldsDirectly(addressData)
-            }
-        } catch (error) {
-            debugLog("MESSAGE", "WooCommerce store update failed, falling back to direct field updates", error)
-            // Fallback to direct field updates
-            updateFieldsDirectly(addressData)
-        }
-    }
-
-// Helper function for direct field updates
-    const updateFieldsDirectly = (addressData) => {
-        if (typeof jQuery !== "undefined") {
-            const fields = ["first_name", "last_name", "company", "address_1", "city", "postcode", "phone", "email"]
-
-            fields.forEach((field) => {
-                const shippingField = jQuery(`#shipping-${field}`)
-                const billingField = jQuery(`#billing-${field}`)
-
-                if (shippingField.length) {
-                    shippingField.val(addressData[field]).trigger('change')
-                }
-                if (billingField.length) {
-                    billingField.val(addressData[field]).trigger('change')
-                }
-            })
-
-            // Trigger form validation
-            jQuery(document.body).trigger('update_checkout')
-        }
-    }
 
 // Helper function to verify fields are actually updated
     const verifyFieldsUpdated = async (expectedData) => {
