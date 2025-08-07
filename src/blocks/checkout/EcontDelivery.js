@@ -43,17 +43,6 @@ const EcontDelivery = () => {
         return key
     }
 
-    // Helper function to get custom selectors from window object
-    const getCustomSelectors = () => {
-        return window.econtCustomSelectors || {
-            customerDetails: '#customer_details',
-            shippingOptions: ['#shipping-option', '.wc-block-components-shipping-rates-control', '.shipping_method', '.woocommerce-shipping-methods', '#shipping_method'],
-            placeOrderButton: ['#place_order', '.wc-block-components-checkout-place-order-button'],
-            additionalFields: '.woocommerce-additional-fields',
-            checkoutForm: ['form[name="checkout"]', 'form.woocommerce-checkout']
-        }
-    }
-
     // Component state
     const [iframeUrl, setIframeUrl] = useState("")
     const [globalShipmentPrices, setGlobalShipmentPrices] = useState({
@@ -166,11 +155,13 @@ const EcontDelivery = () => {
 
     // Function to find the shipping option container
     const findShippingOptionContainer = () => {
-
-        const customSelectors = getCustomSelectors()
-        const selectors = Array.isArray(customSelectors.shippingOptions)
-            ? customSelectors.shippingOptions
-            : [customSelectors.shippingOptions]
+        const selectors = [
+            "#shipping-option",
+            ".wc-block-components-shipping-rates-control",
+            ".shipping_method",
+            ".woocommerce-shipping-methods",
+            "#shipping_method",
+        ]
 
         for (const selector of selectors) {
             const element = document.querySelector(selector)
@@ -216,22 +207,7 @@ const EcontDelivery = () => {
     // Function to disable/enable the place order button
     const togglePlaceOrderButton = (disable) => {
         debugLog("BUTTON", `Toggling place order button - disable: ${disable}`)
-
-        const customSelectors = getCustomSelectors()
-        const selectors = Array.isArray(customSelectors.placeOrderButton)
-            ? customSelectors.placeOrderButton
-            : [customSelectors.placeOrderButton]
-
-        let placeOrderButton = null
-
-        // Try to find the button using custom selectors
-        for (const selector of selectors) {
-            placeOrderButton = document.querySelector(selector)
-            if (placeOrderButton) {
-                debugLog("BUTTON", `Found place order button with selector: ${selector}`)
-                break
-            }
-        }
+        const placeOrderButton = document.querySelector(".wc-block-components-checkout-place-order-button")
 
         if (placeOrderButton) {
             placeOrderButton.disabled = disable
@@ -603,13 +579,12 @@ const EcontDelivery = () => {
         }
     }
 
-// Helper function for direct field updates using custom selectors
+// Helper function for direct field updates
     const updateFieldsDirectly = (addressData) => {
         if (typeof jQuery !== "undefined") {
             const fields = ["first_name", "last_name", "company", "address_1", "city", "postcode", "phone", "email"]
 
             fields.forEach((field) => {
-                // Try both shipping and billing fields
                 const shippingField = jQuery(`#shipping-${field}`)
                 const billingField = jQuery(`#billing-${field}`)
 
@@ -621,19 +596,8 @@ const EcontDelivery = () => {
                 }
             })
 
-            // Trigger form validation using custom form selector
-            const customSelectors = getCustomSelectors()
-            const formSelectors = Array.isArray(customSelectors.checkoutForm)
-                ? customSelectors.checkoutForm
-                : [customSelectors.checkoutForm]
-
-            for (const selector of formSelectors) {
-                const form = jQuery(selector)
-                if (form.length) {
-                    jQuery(document.body).trigger('update_checkout')
-                    break
-                }
-            }
+            // Trigger form validation
+            jQuery(document.body).trigger('update_checkout')
         }
     }
 
