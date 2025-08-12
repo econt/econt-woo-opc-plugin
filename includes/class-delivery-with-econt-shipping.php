@@ -38,7 +38,7 @@ class Delivery_With_Econt_Shipping extends WC_Shipping_Method
 			'shipping-zones',
 			'instance-settings',
         );
-        
+
         $this->init();
     }
     /**
@@ -151,6 +151,25 @@ class Delivery_With_Econt_Shipping extends WC_Shipping_Method
         <div id="delivery_with_econt_calculate_shipping">
         </div>
         <?php                       
-    }    
+    }
 
+	/**
+	 * Check if shipping method is available
+	 *
+	 * @param array $package Shipping package
+	 * @return bool
+	 */
+	public function is_available($package) {
+		// First check parent availability
+		if (!parent::is_available($package)) {
+			return false;
+		}
+
+		// Check if cart contains only virtual products
+		if (DWEH()->cart_contains_only_virtual_products()) {
+			return false;
+		}
+
+		return true;
+	}
 }

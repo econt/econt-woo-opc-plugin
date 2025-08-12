@@ -58,6 +58,12 @@ class Delivery_With_Econt_Helper
 			return false;
 		}
 
+		// Skip if order contains only virtual products
+		if ($this->order_contains_only_virtual_products($order)) {
+			error_log("[Econt Sync] Order contains only virtual products, skipping sync");
+			return false;
+		}
+
 		// Ensure shipping method is correct
 		if ( ! $order->has_shipping_method( Delivery_With_Econt_Options::get_plugin_name() ) ) {
 			error_log("[Econt Sync] Order does not use Econt shipping method");
@@ -398,4 +404,47 @@ class Delivery_With_Econt_Helper
         curl_close($curl);
     }
 
+	/**
+	 * Check if cart contains only virtual products
+	 *
+	 * @return bool
+	 */
+	public function cart_contains_only_virtual_products() {
+		if (!WC()->cart || WC()->cart->is_empty()) {
+			return false;
+		}
+
+		$has_physical_products = false;
+
+		foreach (WC()->cart->get_cart() as $cart_item) {
+			$product = $cart_item['data'];
+			if (!$product->is_virtual()) {
+				$has_physical_products = true;
+				break;
+			}
+		}
+
+		return !$has_physical_products;
+	}
+
+	/**
+	 * Check if order contains only virtual products
+	 *
+	 * @param WC_Order $order
+	 * @return bool
+	 */
+	public function order_contains_only_virtual_products($order) {
+		if (!$order) {
+			return false;
+		}
+
+		foreach ($order->get_items() as $item) {
+			$product = $item->get_product();
+			if ($product && !$product->is_virtual()) {
+				return false;
+			}
+		}
+
+		return true;
+	}
 }

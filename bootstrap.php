@@ -101,6 +101,11 @@ add_action('woocommerce_shipping_init', 'econt_shipping_method_init');
  * @return array
  */
 function add_econt_payment_gateway($gateways) {
+	// Don't add payment gateway if cart contains only virtual products
+	if (DWEH()->cart_contains_only_virtual_products()) {
+		return $gateways;
+	}
+
 	if ((
 			defined('WP_ADMIN') && WP_ADMIN)
 		|| (!WC()->session || @WC()->session->get('chosen_shipping_methods')[0] == 'delivery_with_econt') && get_woocommerce_currency() === "BGN"
@@ -110,6 +115,7 @@ function add_econt_payment_gateway($gateways) {
 	
 	return $gateways;
 }
+
 
 add_filter('woocommerce_payment_gateways', 'add_econt_payment_gateway');
 
@@ -178,6 +184,11 @@ function delivery_with_econt_render_form_modal($checkout) {
 add_action('wp_enqueue_scripts', 'delivery_with_econt_enque_scripts_and_styles');
 
 function delivery_with_econt_enque_scripts_and_styles() {
+
+	// Don't load scripts for virtual-only carts
+	if (DWEH()->cart_contains_only_virtual_products()) {
+		return;
+	}
 
 	// Get custom selectors from options
 	$options = get_option('delivery_with_econt_settings', array());
@@ -272,6 +283,12 @@ function activate_delivery_with_econt() {
  */
 
 function delivery_with_econt_generate_order_service($order_id) {
+	// Skip if order contains only virtual products
+	$order = wc_get_order($order_id);
+	if ($order && DWEH()->order_contains_only_virtual_products($order)) {
+		return;
+	}
+
 	DWEH()->sync_order($order_id);
 }
 
@@ -402,7 +419,13 @@ function action_woocommerce_checkout_process($wccs_custom_checkout_field_pro_pro
 	$chosen_methods = is_array($chosen_methods) ? $chosen_methods : [];
 	$chosen_shipping = !empty($chosen_methods) ? reset($chosen_methods) : '';
 
+	// Only validate if Econt shipping method is chosen
 	if ($chosen_shipping != Delivery_With_Econt_Options::get_plugin_name()) {
+		return;
+	}
+
+	// Skip validation if cart contains only virtual products
+	if (DWEH()->cart_contains_only_virtual_products()) {
 		return;
 	}
 
