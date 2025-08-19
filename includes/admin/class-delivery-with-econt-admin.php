@@ -18,7 +18,7 @@ class Delivery_With_Econt_Admin
             $new_columns[ $column_name ] = $column_info;
 
             if ( 'order_date' === $column_name ) {
-                $new_columns['generate_waybill column-primary'] = __( 'Waybill', 'deliver-with-econt' );
+                $new_columns['generate_waybill'] = __( 'Waybill', 'deliver-with-econt' );
             }
         }
     
@@ -28,14 +28,18 @@ class Delivery_With_Econt_Admin
     /**
      * Populate the "Generate Waybill" column with relevent data
      */
-    public static function add_waybill_column_content( $column ) {
-        global $post;
+    public static function add_waybill_column_content( $column, $order_or_order_id ) {
+//        global $post;
 
-        if ( 'generate_waybill column-primary' === $column ) {
+        if ( 'generate_waybill' === $column ) {
 
-			$order    = wc_get_order( $post->ID );
-			$waybill_id = $order->get_meta('_order_waybill_id');
+	        $order = wc_get_order( $order_or_order_id );
+	        if ( ! $order ) {
+		        return; // safety check
+	        }
 
+	        // Use WordPress method instead of WC method since WC cache is out of sync
+	        $waybill_id = get_post_meta($order->get_id(), '_order_waybill_id', true);
 			if( $order->has_shipping_method(Delivery_With_Econt_Options::get_plugin_name()) && static::check_status( $order->get_status() ) ) {
 				if( WC()->version < '3.2.0' ) {
 					?>
@@ -49,21 +53,21 @@ class Delivery_With_Econt_Admin
 				// echo '<a href="#" class="order-preview2" data-order-id="' . $order->get_id() . '" title="' . esc_attr( __( 'Generate weybill', 'delivery-with-econt' ) ) . '">' . esc_html( __( 'Generate weybill', 'delivery-with-econt' ) ) . '</a>';
 				?>
 				<a href="#!"
-					id="action-waybill-<?php echo $order->get_id(); ?>"				
-					class="button button-primary order-preview2 delivery-with-econt-generate-waybill-button" 
+					id="action-waybill-<?php echo $order->get_id(); ?>"
+					class="button button-primary order-preview2 delivery-with-econt-generate-waybill-button"
 					data-order-id="<?php echo $order->get_id(); ?>"
 					data-waybill-id="<?php echo $waybill_id; ?>"
 					data-econt-currency="<?php echo $order->get_currency()?>"
 					data-payment_method="<?php echo $order->get_payment_method()?>"
 					data-order_status="<?php echo $order->get_status()?>"
 				>
-					<?php echo $waybill_id != '' ? __('Print', 'deliver-with-econt') : __('Generate', 'deliver-with-econt'); ?>					
+					<?php echo $waybill_id != '' ? __('Print', 'deliver-with-econt') : __('Generate', 'deliver-with-econt'); ?>
 				</a>
-				<a href="#!" 
+				<a href="#!"
 					id="refresh-waybill-<?php echo $order->get_id(); ?>"
 					class="button button-primary order-preview2 delivery-with-econt-check-waybill-status"
 					data-order-id="<?php echo $order->get_id(); ?>"
-					data-waybill-id="<?php echo $waybill_id; ?>"					
+					data-waybill-id="<?php echo $waybill_id; ?>"
 				>
 					<span class="dashicons dashicons-update-alt"></span>
 					<div class="spinner" id="spiner-order-<?php echo $order->get_id(); ?>"></div>
@@ -71,7 +75,7 @@ class Delivery_With_Econt_Admin
 			<?php } else if ( $order->has_shipping_method(Delivery_With_Econt_Options::get_plugin_name()) && ! static::check_status( $order->get_status() )  && $waybill_id) {
 				?>
 					<a href="<?php echo DWEH()->get_tracking_url($waybill_id) ?>" target="_blank"><?php echo $waybill_id?></a>
-				<?php 
+				<?php
 			}
 
         }

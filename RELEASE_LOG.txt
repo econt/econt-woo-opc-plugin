@@ -1,3 +1,4 @@
+Version 2.1.0 - 20.08.2025 - Update Admin columns to work with new HPOS orders; Fix waybill order meta;
 Version 2.0.9 - 12.08.2025 - Hide Econt shipping method and validations when cart contains only virtual products
 Version 2.0.8 - 07.08.2025 - Enhanced field update functions with better React compatibility; Added multiple field selectors for improved theme compatibility; Improved event triggering for block-based checkouts
 Version 2.0.7 - 07.08.2025 - Disable checkout form selector options in block based checkouts

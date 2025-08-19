@@ -187,6 +187,7 @@ jQuery( document ).ready( function (dwe) {
   });
 
     function update_waybill(message) {
+        console.log(message)
         return dwe.ajax({
             url: delivery_with_econt_admin_object.ajax_url,
             data: {
