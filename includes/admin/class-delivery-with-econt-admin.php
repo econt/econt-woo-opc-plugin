@@ -72,6 +72,7 @@ class Delivery_With_Econt_Admin
 					<span class="dashicons dashicons-update-alt"></span>
 					<div class="spinner" id="spiner-order-<?php echo $order->get_id(); ?>"></div>
 				</a>
+
 			<?php } else if ( $order->has_shipping_method(Delivery_With_Econt_Options::get_plugin_name()) && ! static::check_status( $order->get_status() )  && $waybill_id) {
 				?>
 					<a href="<?php echo DWEH()->get_tracking_url($waybill_id) ?>" target="_blank"><?php echo $waybill_id?></a>

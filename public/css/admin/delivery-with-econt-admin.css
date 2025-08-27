@@ -20,6 +20,10 @@ a.delivery-with-econt-check-waybill-status > div.spinner {
     margin-left: 3px;
 }
 
+a.delivery-with-econt-sync-waybill{
+    width: fit-content;
+}
+
 .econt-action-buttons {
     float: right;
 }
