@@ -5,8 +5,8 @@ msgstr ""
 "Project-Id-Version: Econt Delivery 2.1.4\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/econt-woo-opc-"
 "plugin\n"
-"POT-Creation-Date: 2025-04-10T13:08:21+00:00\n"
-"PO-Revision-Date: 2025-04-10 16:09+0300\n"
+"POT-Creation-Date: 2025-08-28T22:47:44+00:00\n"
+"PO-Revision-Date: 2025-08-29 01:57+0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: bg_BG\n"
@@ -14,7 +14,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 3.6\n"
+"X-Generator: Poedit 3.7\n"
 "X-Domain: deliver-with-econt\n"
 
 #. Plugin Name of the plugin
@@ -40,12 +40,61 @@ msgstr "Достави с Еконт"
 msgid "Econt Express LTD."
 msgstr "Еконт Експрес АД"
 
-#: bootstrap.php:202 bootstrap.php:203
+#: bootstrap.php:234 bootstrap.php:235
 #: includes/class-delivery-with-econt-shipping.php:65
 msgid "Econt Delivery"
 msgstr "Достави с Еконт"
 
-#: bootstrap.php:386 bootstrap.php:392
+#: bootstrap.php:348
+msgid "Sync Econt Waybills"
+msgstr "Синхронизирай товарителници на Еконт"
+
+#: bootstrap.php:405
+msgid "Waybill synced via bulk action."
+msgstr "Товарителницата е синхронизирана чрез групово действие."
+
+#: bootstrap.php:408
+#, php-format
+msgid "Failed to sync order #%d"
+msgstr "Неуспешна синхронизация на поръчка №%d"
+
+#: bootstrap.php:412
+#, php-format
+msgid "Error syncing order #%d: %s"
+msgstr "Грешка при синхронизация на поръчка №%d: %s"
+
+#: bootstrap.php:458
+#, php-format
+msgid "Successfully synced %d Econt waybill."
+msgid_plural "Successfully synced %d Econt waybills."
+msgstr[0] "Успешно синхронизирана %d товарителница на Еконт."
+msgstr[1] "Успешно синхронизирани %d товарителници на Еконт."
+
+#: bootstrap.php:471
+#, php-format
+msgid "Failed to sync %d order."
+msgid_plural "Failed to sync %d orders."
+msgstr[0] "Неуспешна синхронизация на %d поръчка."
+msgstr[1] "Неуспешна синхронизация на %d поръчки."
+
+#: bootstrap.php:482
+msgid "Errors:"
+msgstr "Грешки:"
+
+#: bootstrap.php:486
+#, php-format
+msgid "... and %d more errors."
+msgstr "… и още %d грешки."
+
+#: bootstrap.php:499
+msgid ""
+"No orders were processed. Make sure selected orders use Econt delivery and "
+"contain physical products."
+msgstr ""
+"Няма обработени поръчки. Уверете се, че избраните поръчки използват доставка "
+"с Еконт и съдържат физически продукти."
+
+#: bootstrap.php:622 bootstrap.php:628
 msgid "You can't submit order, if shipping price is not calculated properly!"
 msgstr ""
 "Не може да финализирате поръка, без да сте калкулирали цената на доставка!"
@@ -54,13 +103,13 @@ msgstr ""
 msgid "Waybill"
 msgstr "Товарителница"
 
-#: includes/admin/class-delivery-with-econt-admin.php:60
-#: includes/admin/class-delivery-with-econt-admin.php:126
+#: includes/admin/class-delivery-with-econt-admin.php:64
+#: includes/admin/class-delivery-with-econt-admin.php:131
 msgid "Print"
 msgstr "Отпечатай"
 
-#: includes/admin/class-delivery-with-econt-admin.php:60
-#: includes/admin/class-delivery-with-econt-admin.php:126
+#: includes/admin/class-delivery-with-econt-admin.php:64
+#: includes/admin/class-delivery-with-econt-admin.php:131
 msgid "Generate"
 msgstr "Генерирай"
 
@@ -85,49 +134,56 @@ msgstr "Частен ключ"
 msgid "Use Econt Demo Service"
 msgstr "Използвай демо средата на Еконт"
 
-#: includes/class-delivery-with-econt-options.php:136
+#: includes/class-delivery-with-econt-options.php:113
+msgid "Customer Details Container"
+msgstr "Контейнер за клиентски данни"
+
+#: includes/class-delivery-with-econt-options.php:148
 msgid "Enter your settings below:"
 msgstr "Въведи данните:"
 
-#: build/blocks/checkout.js:197 src/blocks/checkout/EcontDelivery.js:181
-#: build/blocks/checkout.js:181
-msgid "Please complete Econt delivery details first"
+#: includes/class-delivery-with-econt-options.php:190
+msgid ""
+"CSS selector for the main customer details container (billing/shipping "
+"fields)"
 msgstr ""
-"Моля, попълнете данните за доставка с Еконт, преди да направите поръчката си"
+"CSS селектор за основния контейнер с клиентски данни (полета за плащане/"
+"доставка)"
 
-#: build/blocks/checkout.js:446 src/blocks/checkout/EcontDelivery.js:456
-#: build/blocks/checkout.js:456
-msgid "Delivery to address:"
-msgstr "Доставка до адрес:"
-
-#: build/blocks/checkout.js:446 src/blocks/checkout/EcontDelivery.js:457
-#: build/blocks/checkout.js:457
-msgid "Delivery to office:"
-msgstr "Доставка до офис:"
-
-#: build/blocks/checkout.js:633 src/blocks/checkout/EcontDelivery.js:651
-#: build/blocks/checkout.js:651
-msgid "Econt Delivery Details"
-msgstr "Данни за доставка с Еконт"
-
-#: build/blocks/checkout.js:634 src/blocks/checkout/EcontDelivery.js:652
-#: build/blocks/checkout.js:652
+#: includes/class-econt-blocks.php:64
 msgid "Edit delivery details"
 msgstr "Промени данни за доставка с Еконт"
 
-#: build/blocks/checkout.js:679 src/blocks/checkout/EcontDelivery.js:702
-#: build/blocks/checkout.js:702
+#: includes/class-econt-blocks.php:65
+msgid "Econt Delivery Details"
+msgstr "Данни за доставка с Еконт"
+
+#: includes/class-econt-blocks.php:66
 msgid "Loading Econt delivery options..."
 msgstr "Зареждане на данните за доставка с Еконт…"
 
-#: build/blocks/checkout.js:734 src/blocks/checkout/EcontDelivery.js:783
-#: build/blocks/checkout.js:783
+#: includes/class-econt-blocks.php:67
 msgid "Please complete Econt delivery details before placing your order"
 msgstr ""
 "Моля, попълнете данните за доставка по Еконт, преди да направите поръчката си"
 
-#~ msgid "Calculate price"
-#~ msgstr "Изчисли цена за доставка"
+#: includes/class-econt-blocks.php:68
+msgid "Please complete Econt delivery details first"
+msgstr ""
+"Моля, попълнете данните за доставка с Еконт, преди да направите поръчката си"
+
+#: includes/class-econt-blocks.php:69
+msgid "Delivery to office:"
+msgstr "Доставка до офис:"
+
+#: includes/class-econt-blocks.php:70
+msgid "Delivery to address:"
+msgstr "Доставка до адрес:"
+
+#: includes/class-econt-blocks.php:71 build/blocks/checkout.js:1183
+#: src/blocks/checkout/index.js:67 build/blocks/checkout.js:1163
+msgid "Calculating..."
+msgstr "Изчисляване..."
 
 #~ msgid "Confirm"
 #~ msgstr "Потвърди"

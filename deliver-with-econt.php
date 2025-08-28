@@ -12,7 +12,7 @@
  * Plugin Name:       Econt Delivery OneCheckout
  * Plugin URI:        https://econt.com/developers/
  * Description:       Econt Shipping Module
- * Version:           3.0.0
+ * Version:           3.0.1
  * Author:            Econt Express LTD.
  * Author URI:        https://econt.com/developers/
  * License:           GPL-2.0+
@@ -90,12 +90,31 @@ function is_using_block_checkout() {
 	return $has_checkout_block || $contains_block_pattern;
 }
 
+function is_block_based_cart() {
+	if (!is_cart()) {
+		return false;
+	}
+
+	$cart_page_id = wc_get_page_id('cart');
+	$cart_post = get_post($cart_page_id);
+
+	if (!$cart_post) {
+		return false;
+	}
+
+	// Check for cart blocks
+	$has_cart_block = has_block('woocommerce/cart', $cart_post->post_content);
+	$contains_block_pattern = (strpos($cart_post->post_content, '<!-- wp:woocommerce/cart') !== false);
+
+	return $has_cart_block || $contains_block_pattern;
+}
+
 // Move initialization to a later hook that runs when the page is being rendered
 if ( ! function_exists( 'econt_init_blocks' ) ) {
 	function econt_init_blocks() {
 
 		// Only load blocks if we're on the checkout page and using block checkout
-		if ( is_checkout() && is_using_block_checkout() ) {
+		if ( ( is_checkout() && is_using_block_checkout() ) || ( is_cart() && is_block_based_cart() )) {
 			require_once ECONT_PLUGIN_DIR . 'includes/class-econt-blocks.php';
 		}
 	}

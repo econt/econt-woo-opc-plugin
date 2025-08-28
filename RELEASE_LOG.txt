@@ -1,3 +1,4 @@
+Version 3.0.1 - 29.08.2025 - feature: Write Calculating... instead of Free when cookie with price is still not set
 Version 3.0.0 - 27.08.2025 - feature: Add bulk action for syncing Econt waybills
 Version 2.1.0 - 20.08.2025 - Update Admin columns to work with new HPOS orders; Fix waybill order meta;
 Version 2.0.9 - 12.08.2025 - Hide Econt shipping method and validations when cart contains only virtual products

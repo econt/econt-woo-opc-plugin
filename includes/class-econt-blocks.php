@@ -12,30 +12,30 @@ class Econt_Blocks {
     }
 
     public function enqueue_scripts() {
-        if (!is_checkout()) {
-            return;
-        }
+	    if (!is_checkout() && !is_cart()) {
+		    return;
+	    }
 
 	    wp_enqueue_script('wp-i18n');
 
         // Register and enqueue the block script
-        wp_register_script(
-            'econt-delivery-block',
-            plugins_url('../build/blocks/checkout.js', __FILE__),
-            array(
-				'jquery',
-                'wp-plugins',
-                'wp-element',
-                'wp-components',
-                'wp-i18n',
-                'wp-data',
-	            'wp-hooks',
-                'wc-blocks-checkout',
-                'wc-blocks-registry'
-            ),
-            filemtime(plugin_dir_path(__DIR__) . 'build/blocks/checkout.js'),
-            true
-        );
+	    wp_register_script(
+		    'econt-delivery-block',
+		    plugins_url('../build/blocks/checkout.js', __FILE__),
+		    array(
+			    'jquery',
+			    'wp-plugins',
+			    'wp-element',
+			    'wp-components',
+			    'wp-i18n',
+			    'wp-data',
+			    'wp-hooks',
+			    'wc-blocks-checkout',
+			    'wc-blocks-registry'
+		    ),
+		    filemtime(plugin_dir_path(__DIR__) . 'build/blocks/checkout.js'),
+		    true
+	    );
 
         // Get cart weight
 	    $cart_weight = 0;
@@ -67,7 +67,8 @@ class Econt_Blocks {
 		    'Please complete Econt delivery details before placing your order' => __('Please complete Econt delivery details before placing your order', 'deliver-with-econt'),
 		    'Please complete Econt delivery details first' => __('Please complete Econt delivery details first', 'deliver-with-econt'),
 		    'Delivery to office:' => __('Delivery to office:', 'deliver-with-econt'),
-		    'Delivery to address:' => __('Delivery to address:', 'deliver-with-econt')
+		    'Delivery to address:' => __('Delivery to address:', 'deliver-with-econt'),
+		    'Calculating...' => __('Calculating...', 'deliver-with-econt')
 	    );
 
 	    // Add these translations to the localized data
