@@ -15,6 +15,7 @@ spl_autoload_register(function($class) {
 		'Delivery_With_Econt_Shipping'  => 'includes/class-delivery-with-econt-shipping.php',
 		'Delivery_With_Econt_Activator' => 'includes/class-delivery-with-econt-activator.php',
 		'Delivery_With_Econt_Payment'   => 'includes/class-delivery-with-econt-payment.php',
+		'Econt_Payment_Blocks'          => 'includes/class-econt-payment-blocks.php',
 		
 		// includes admin/
 		'Delivery_With_Econt_Admin'     => 'includes/admin/class-delivery-with-econt-admin.php',
@@ -741,3 +742,37 @@ function delivery_with_econt_update_shipping() {
 
 add_action('wp_ajax_woocommerce_delivery_with_econt_update_shipping', 'delivery_with_econt_update_shipping');
 add_action('wp_ajax_nopriv_woocommerce_delivery_with_econt_update_shipping', 'delivery_with_econt_update_shipping');
+
+/**
+ * Register EcontPay with WooCommerce Blocks
+ */
+function register_econt_payment_method_with_blocks() {
+    // Check if WooCommerce Blocks is active and required classes exist
+    if (
+        class_exists('Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodType') &&
+        function_exists('woocommerce_store_api_register_payment_requirements')
+    ) {
+        require_once plugin_dir_path(__FILE__) . 'includes/class-econt-payment-blocks.php';
+        
+        add_action(
+            'woocommerce_blocks_payment_method_type_registration',
+            function($payment_method_registry) {
+                $payment_method_registry->register(new Econt_Payment_Blocks());
+            }
+        );
+
+        // Register settings for blocks
+        add_filter(
+            'woocommerce_blocks_payment_method_data',
+            function($payment_method_data) {
+                $payment_method_data['econt_payment'] = array(
+                    'title' => 'EcontPay',
+                    'description' => 'Плащане с карта чрез EcontPay',
+                );
+                return $payment_method_data;
+            }
+        );
+    }
+}
+
+add_action('woocommerce_blocks_loaded', 'register_econt_payment_method_with_blocks');

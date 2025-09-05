@@ -4,6 +4,7 @@ module.exports = {
     ...defaultConfig,
     entry: {
         'blocks/checkout': './src/blocks/checkout/index.js',
+        'blocks/econt-payment': './src/blocks/econt-payment/index.js',
     },
     resolve: {
         ...defaultConfig.resolve,

@@ -25,6 +25,9 @@ class Delivery_With_Econt_Payment extends WC_Payment_Gateway {
         $this->enabled = $this->get_option('enabled');
 
         add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
+        
+        // Support for order status changes with HPOS
+        add_action('woocommerce_order_status_changed', array($this, 'handle_order_status_change'), 10, 3);
     }
 
     public function init_form_fields() {
@@ -100,7 +103,7 @@ class Delivery_With_Econt_Payment extends WC_Payment_Gateway {
             $message['type'] = "error";
 
             // if we receive error message from econt, we save it in the database for display it later
-            update_post_meta($order->get_id(), '_process_payment_error', sanitize_text_field( $message['text'] ));
+            $this->update_order_meta($order, '_process_payment_error', sanitize_text_field( $message['text'] ));
 
             throw new Exception($message['text']);
         }
@@ -137,13 +140,78 @@ class Delivery_With_Econt_Payment extends WC_Payment_Gateway {
             $message['type'] = "error";
 
             // if we receive error message from econt, we save it in the database for display it later
-            update_post_meta($order->get_id(), '_confirm_payment_error', sanitize_text_field( $message['text'] ));
+            $this->update_order_meta($order, '_confirm_payment_error', sanitize_text_field( $message['text'] ));
 
             throw new Exception($message['text']);
         }
 
         $order->payment_complete($_GET['id_transaction']);
         DWEH()->sync_order($order, [], false, $response['paymentToken']);
+    }
+
+    /**
+     * Update order meta in HPOS-compatible way
+     *
+     * @param WC_Order $order
+     * @param string $key
+     * @param mixed $value
+     */
+    private function update_order_meta($order, $key, $value) {
+        if ($order instanceof WC_Order) {
+            $order->update_meta_data($key, $value);
+            $order->save();
+        } else {
+            // Fallback for older WooCommerce versions
+            update_post_meta($order->get_id(), $key, $value);
+        }
+    }
+
+    /**
+     * Get order meta in HPOS-compatible way
+     *
+     * @param WC_Order $order
+     * @param string $key
+     * @param bool $single
+     * @return mixed
+     */
+    private function get_order_meta($order, $key, $single = true) {
+        if ($order instanceof WC_Order) {
+            return $order->get_meta($key, $single);
+        } else {
+            // Fallback for older WooCommerce versions
+            return get_post_meta($order->get_id(), $key, $single);
+        }
+    }
+
+    /**
+     * Handle order status changes for HPOS compatibility
+     *
+     * @param int $order_id
+     * @param string $old_status
+     * @param string $new_status
+     */
+    public function handle_order_status_change($order_id, $old_status, $new_status) {
+        $order = wc_get_order($order_id);
+        
+        if (!$order || $order->get_payment_method() !== $this->id) {
+            return;
+        }
+
+        // Handle specific status changes if needed
+        switch ($new_status) {
+            case 'processing':
+                // Order is being processed after payment
+                break;
+            case 'completed':
+                // Order is completed
+                break;
+            case 'cancelled':
+                // Order is cancelled
+                break;
+            case 'refunded':
+                // Order is refunded
+                break;
+        }
     }
 
 }

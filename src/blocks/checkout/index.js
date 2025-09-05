@@ -76,7 +76,12 @@ const EcontAlwaysLoadedContent = () => {
         if (econtShippingOption) {
             const secondaryLabel = econtShippingOption.closest('label')?.querySelector('.wc-block-components-radio-control__secondary-label');
             if (secondaryLabel) {
-                secondaryLabel.innerHTML = `<span class="wc-block-checkout__shipping-option--calculating">${priceText}</span>`;
+                let priceSpan = secondaryLabel.querySelector('.wc-block-checkout__shipping-option--free');
+
+                if (priceSpan) {
+                    priceSpan.textContent = priceText;
+                }
+
             }
         }
 
@@ -102,13 +107,10 @@ const EcontAlwaysLoadedContent = () => {
         // Check immediately
         checkShippingPrice();
 
-        // Set up an interval to periodically check the cookie
-        const intervalId = setInterval(checkShippingPrice, 300); // Check every second
+        // Run once after a delay (e.g., 500ms)
+        const timeoutId = setTimeout(checkShippingPrice, 500);
 
-        // Cleanup interval
-        return () => {
-            clearInterval(intervalId);
-        };
+        return () => clearTimeout(timeoutId);
     }, [selectedShippingMethod]);
 
 
