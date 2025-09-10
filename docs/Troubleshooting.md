@@ -112,6 +112,8 @@ console.log('Econt calculator loaded:', typeof EcontCalculator !== 'undefined');
 - Няма Waybill ID в админ панела
 - Клиентът не получава tracking номер
 
+*Проверете дали се показват Econt колони в админ панела за поръчки*
+
 #### Диагностика:
 ```php
 // Проверете дали Cash on Delivery е активиран

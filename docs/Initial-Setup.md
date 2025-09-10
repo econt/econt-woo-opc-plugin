@@ -8,6 +8,9 @@
 1. Влезте в WordPress Admin панела
 2. Отидете на **Настройки → Econt Доставка**
 
+![Plugin Settings](../extracted_images/screenshot_1_4.png)
+*Достъп до настройките на Econt плъгина*
+
 ### Метод 2: Чрез Плъгини страницата
 1. Отидете на **Плъгини → Инсталирани плъгини**
 2. Намерете "Econt Delivery OneCheckout"
@@ -33,6 +36,10 @@
 ### Store ID (Идентификатор на магазина)
 1. Влезте в [Econt Delivery платформата](https://delivery.econt.com/)
 2. Отидете на **Settings → API Integration**
+
+![API Keys](../extracted_images/screenshot_1_11.png)
+*Получаване на API данни от Econt Delivery платформата*
+
 3. Копирайте вашия **Store ID**
 4. Въведете го в полето (само числа)
 
@@ -49,24 +56,8 @@
 
 ## Тест на връзката
 
-### Автоматична проверка
-След въвеждане на данните:
-1. Кликнете **Save Changes**
-2. Плъгинът автоматично ще тества API връзката
-3. Ще видите едно от следните съобщения:
-
-**Успех:**
-```
-✅ API връзката е успешна
-```
-
-**Грешка:**
-```
-❌ API връзката неуспешна: [описание на грешката]
-```
-
 ### Ръчна проверка
-За допълнителен тест:
+
 1. Отидете на checkout страница с продукт в количката
 2. Изберете Econt като метод за доставка
 3. Попълнете адреса за доставка
@@ -79,11 +70,21 @@
 1. **Отидете на WooCommerce настройки:**
    - **WooCommerce → Настройки → Доставка**
 
+![Shipping Settings](../extracted_images/screenshot_1_8.png)
+*WooCommerce доставки - настройка на зони*
+
 2. **Конфигурирайте зоните:**
    - Кликнете на зоната (напр. "Bulgaria")
    - В **Shipping Methods** кликнете **Add shipping method**
+
+![Add Shipping Method](../extracted_images/screenshot_1_9.png)
+*Добавяне на Econt като метод за доставка*
+
    - Изберете **Econt** от dropdown менюто
    - Кликнете **Add shipping method**
+
+![Econt Shipping Configuration](../extracted_images/screenshot_1_10.png)
+*Конфигуриране на Econt доставка*
 
 3. **Настройте приоритета:**
    - Преместете Econt на желаната позиция
@@ -113,16 +114,17 @@ Econt изисква активиран "Cash on Delivery":
 1. **Отидете на:**
    - **WooCommerce → Настройки → Payments**
 
+![Payment Settings](../extracted_images/screenshot_1_13.png)
+*Настройки на плащанията в WooCommerce*
+
 2. **Активирайте "EcontPay":**
    - Намерете "EcontPay" в списъка
    - Уверете се, че е **Enabled**
    - Кликнете на него за допълнителни настройки
 
-3. **Конфигурирайте:**
-   - **Title:** "EcontPay"
-   - **Description:** "EcontPay"
-   - **Instructions:** EcontPay
-   - **Enable for shipping methods:** Изберете "Econt"
+![EcontPay Configuration](../extracted_images/screenshot_1_12.png)
+*Конфигуриране на EcontPay платежен метод*
+
 
 ## Конфигуриране на продуктите
 
@@ -155,7 +157,7 @@ Econt изисква активиран "Cash on Delivery":
 1. **Подготовка:**
    - Уверете се, че сте в Demo режим
    - Имате продукт с тегло в количката
-   - Cash on Delivery е активиран
+   - Cash on Delivery / EcontPay е активиран
 
 2. **Процес на тестване:**
    - Отидете на checkout

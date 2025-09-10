@@ -19,16 +19,25 @@
 ### Метод 1: Автоматично от GitHub (Препоръчително)
 
 1. **Изтеглете най-новата версия:**
-   - Отидете на [Releases страницата](https://github.com/econt/econt-woo-opc-plugin/releases)
-   - Кликнете върху най-новия release
-   - Изтеглете ZIP файла
+   - [Сваляне от GitHub](https://github.com/econt/econt-woo-opc-plugin/releases/latest/download/econt-woo-opc-plugin-main.zip)
 
 2. **Качете в WordPress:**
    - Влезте в WordPress Admin панела
    - Отидете на **Плъгини → Добавяне на нов**
+   
+   ![WordPress Plugins Page](../extracted_images/screenshot_1_1.png)
+   *WordPress админ панел - страница с плъгини*
+   
    - Кликнете **Качване на плъгин**
+   
+   ![Upload Plugin](../extracted_images/screenshot_1_2.png)
+   *Качване на плъгин файл*
+   
    - Изберете изтегления ZIP файл
    - Натиснете **Инсталиране сега**
+   
+   ![Install Plugin](../extracted_images/screenshot_1_3.png)
+   *Инсталиране на плъгина*
 
 3. **Активирайте плъгина:**
    - След инсталацията кликнете **Активиране**
@@ -54,7 +63,7 @@
 
 ```bash
 # Изтеглете от GitHub
-wp plugin install https://github.com/econt/econt-woo-opc-plugin/releases/latest/download/econt-woo-opc-plugin.zip
+wp plugin install https://github.com/econt/econt-woo-opc-plugin/releases/latest/download/econt-woo-opc-plugin-main.zip
 
 # Активирайте плъгина
 wp plugin activate deliver-with-econt
@@ -144,5 +153,5 @@ wp plugin list --status=active
 ## Поддръжка при инсталация
 
 Ако имате проблеми с инсталацията:
-- 📧 Email: developers@econt.com
+- 📧 Email: [support_integrations@econt.com](mailto:support_integrations@econt.com)
 - 🐛 GitHub Issues: [Създайте нов issue](https://github.com/econt/econt-woo-opc-plugin/issues/new)
