@@ -25,18 +25,18 @@
    - Влезте в WordPress Admin панела
    - Отидете на **Плъгини → Добавяне на нов**
    
-   ![WordPress Plugins Page](../extracted_images/screenshot_1_1.png)
+   ![WordPress Plugins Page](https://raw.githubusercontent.com/econt/econt-woo-opc-plugin/main/extracted_images/screenshot_1_1.png)
    *WordPress админ панел - страница с плъгини*
    
    - Кликнете **Качване на плъгин**
    
-   ![Upload Plugin](../extracted_images/screenshot_1_2.png)
+   ![Upload Plugin](https://raw.githubusercontent.com/econt/econt-woo-opc-plugin/main/extracted_images/screenshot_1_2.png)
    *Качване на плъгин файл*
    
    - Изберете изтегления ZIP файл
    - Натиснете **Инсталиране сега**
    
-   ![Install Plugin](../extracted_images/screenshot_1_3.png)
+   ![Install Plugin](https://raw.githubusercontent.com/econt/econt-woo-opc-plugin/main/extracted_images/screenshot_1_3.png)
    *Инсталиране на плъгина*
 
 3. **Активирайте плъгина:**

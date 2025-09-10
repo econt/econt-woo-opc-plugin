@@ -1,6 +1,10 @@
 <div align="center">
 
-![Econt Logo](./public/images/econt-logo.svg)
+<div align="center" width="100%">
+  <img src="https://raw.githubusercontent.com/econt/econt-woo-opc-plugin/main/public/images/econt-logo.svg" 
+       width="250" 
+       alt="Econt Logo" />
+  </div>
 
 # 📦 Econt WooCommerce Плъгин
 ## Официална Интеграция за Доставки

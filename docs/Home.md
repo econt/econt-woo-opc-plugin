@@ -3,7 +3,11 @@
 # 📦 Econt WooCommerce Плъгин Wiki
 ## Официална документация за интеграция с Econt Express
 
-![Econt Logo](../public/images/econt-logo.svg)
+<div align="center" width="100%">
+  <img src="https://raw.githubusercontent.com/econt/econt-woo-opc-plugin/main/public/images/econt-logo.svg" 
+       width="250" 
+       alt="Econt Logo" />
+  </div>
 
 ### 🚀 Превърнете вашия WooCommerce магазин в професионална доставна платформа!
 
@@ -39,6 +43,9 @@
 - Поддръжка за различни типове доставка
 - Автоматично обновяване при промяна на параметрите
 
+![Admin Interface](https://raw.githubusercontent.com/econt/econt-woo-opc-plugin/main/extracted_images/screenshot_1_5.png)
+*Админ интерфейс за управление на поръчки с Econt данни*
+
 ### 📄 **Генериране на товарителници**
 - Автоматично създаване при потвърждаване на поръчка
 - Уникални tracking номера за всяка пратка
@@ -48,6 +55,9 @@
 - Съвместимост с блоковия checkout на WooCommerce
 - Работи с класическия checkout
 - Responsive дизайн за мобилни устройства
+
+![Checkout Process](https://raw.githubusercontent.com/econt/econt-woo-opc-plugin/main/extracted_images/screenshot_1_12.png)
+*Как клиентите виждат Econt опциите в checkout процеса*
 
 ### 🎛️ **Администраторско управление**
 - Специализирани колони в WooCommerce поръчки
@@ -59,7 +69,7 @@
 - Безпроблемни транзакции
 - Увеличени възможности за продажби
 
-![Payment Gateway](../extracted_images/screenshot_1_13.png)
+![Payment Gateway](https://raw.githubusercontent.com/econt/econt-woo-opc-plugin/main/extracted_images/screenshot_1_13.png)
 *EcontPay платежен метод в настройките*
 
 ## 📋 Системни изисквания
