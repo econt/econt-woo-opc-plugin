@@ -56,7 +56,7 @@
 - Работи с класическия checkout
 - Responsive дизайн за мобилни устройства
 
-![Checkout Process](https://raw.githubusercontent.com/econt/econt-woo-opc-plugin/main/extracted_images/screenshot_1_12.png)
+![Checkout Process](https://raw.githubusercontent.com/econt/econt-woo-opc-plugin/main/extracted_images/screenshot_1_14.png)
 *Как клиентите виждат Econt опциите в checkout процеса*
 
 ### 🎛️ **Администраторско управление**

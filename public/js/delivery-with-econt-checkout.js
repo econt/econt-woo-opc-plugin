@@ -133,8 +133,8 @@ jQuery(document).ready(function($){
 		}
 	});
 
-	// Form submission validation
-	$("form").submit(function(e) {
+	// Form submission validation - exclude coupon forms
+	$("form").not("form.woocommerce-form-coupon").submit(function(e) {
 		validateShippingPrice(e);
 	});
 
@@ -156,8 +156,8 @@ jQuery(document).ready(function($){
 	});
 
 	// Coupon handlers
-	$(document).on('click', "button[name='apply_coupon']", resetCookies);
-	$(document).on('click', "a.woocommerce-remove-coupon", resetCookies);
+	// $(document).on('click', "button[name='apply_coupon']", resetCookies);
+	// $(document).on('click', "a.woocommerce-remove-coupon", resetCookies);
 
 	// Payment method change handler for Econt shipping
 	$(document.body).on('updated_checkout', function() {
