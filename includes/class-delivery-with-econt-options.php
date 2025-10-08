@@ -263,7 +263,11 @@ class Delivery_With_Econt_Options
 			);
 		}
 		echo '</div>';
-		echo '<small>' . __('Select billing fields to hide when Econt shipping is selected', 'deliver-with-econt') . '</small>';
+		echo '<div style="padding: 10px; background-color: #f0f6fc; border-left: 4px solid #2271b1; margin-top: 10px;">';
+		echo '<p style="margin: 0;"><strong>' . __('About this setting:', 'deliver-with-econt') . '</strong></p>';
+		echo '<p style="margin: 5px 0 0 0;">' . __('Select the billing fields you want to hide on the checkout page when Econt shipping method is selected. These fields will be filled automatically from the Econt delivery form. If no fields are selected, the entire billing section will be hidden (legacy behavior).', 'deliver-with-econt') . '</p>';
+		echo '<p style="margin: 5px 0 0 0;"><em>' . __('Recommended fields to hide: First Name, Last Name, Country, Address 1, City, State/Region, Phone', 'deliver-with-econt') . '</em></p>';
+		echo '</div>';
 	}
 
 	/**
@@ -296,7 +300,11 @@ class Delivery_With_Econt_Options
 			);
 		}
 		echo '</div>';
-		echo '<small>' . __('Select shipping fields to hide when Econt shipping is selected', 'deliver-with-econt') . '</small>';
+		echo '<div style="padding: 10px; background-color: #f0f6fc; border-left: 4px solid #2271b1; margin-top: 10px;">';
+		echo '<p style="margin: 0;"><strong>' . __('About this setting:', 'deliver-with-econt') . '</strong></p>';
+		echo '<p style="margin: 5px 0 0 0;">' . __('Select the shipping fields you want to hide on the checkout page when Econt shipping method is selected. These fields will be filled automatically from the Econt delivery form.', 'deliver-with-econt') . '</p>';
+		echo '<p style="margin: 5px 0 0 0;"><em>' . __('Note: Only applicable if "Ship to a different address" option is enabled on your checkout.', 'deliver-with-econt') . '</em></p>';
+		echo '</div>';
 	}
 
 	/**
@@ -305,10 +313,22 @@ class Delivery_With_Econt_Options
 	public function custom_hidden_selectors_callback()
 	{
 		printf(
-			'<textarea id="custom_hidden_selectors" name="delivery_with_econt_settings[custom_hidden_selectors]" rows="5" style="width: 100%%; max-width: 600px;">%s</textarea><br><small>%s</small>',
-			isset($this->options['custom_hidden_selectors']) ? esc_textarea($this->options['custom_hidden_selectors']) : '',
-			__('Enter custom CSS selectors (one per line) for fields to hide when Econt is selected. For example: .custom-field-wrapper or #special_field_row', 'deliver-with-econt')
+			'<textarea id="custom_hidden_selectors" name="delivery_with_econt_settings[custom_hidden_selectors]" rows="5" style="width: 100%%; max-width: 600px;" placeholder=".custom-field-wrapper%s#special_field_row%s.elementor-widget-woocommerce-checkout-page .my-custom-field">%s</textarea>',
+			"\n",
+			"\n",
+			isset($this->options['custom_hidden_selectors']) ? esc_textarea($this->options['custom_hidden_selectors']) : ''
 		);
+		echo '<div style="padding: 10px; background-color: #fff3cd; border-left: 4px solid #ffc107; margin-top: 10px;">';
+		echo '<p style="margin: 0;"><strong>' . __('Advanced Setting - For Theme Customization:', 'deliver-with-econt') . '</strong></p>';
+		echo '<p style="margin: 5px 0 0 0;">' . __('Enter custom CSS selectors (one per line) for additional fields to hide when Econt shipping is selected. This is useful when your theme adds custom checkout fields or uses custom field wrappers.', 'deliver-with-econt') . '</p>';
+		echo '<p style="margin: 5px 0 0 0;"><strong>' . __('Examples:', 'deliver-with-econt') . '</strong></p>';
+		echo '<ul style="margin: 5px 0 0 20px;">';
+		echo '<li><code>.custom-field-wrapper</code> - ' . __('Hides elements with this class', 'deliver-with-econt') . '</li>';
+		echo '<li><code>#special_field_row</code> - ' . __('Hides element with this ID', 'deliver-with-econt') . '</li>';
+		echo '<li><code>.elementor-widget-woocommerce-checkout-page .my-field</code> - ' . __('Hides specific field in Elementor checkout', 'deliver-with-econt') . '</li>';
+		echo '</ul>';
+		echo '<p style="margin: 5px 0 0 0;"><em>' . __('Note: Use browser developer tools to inspect your checkout page and find the correct selectors.', 'deliver-with-econt') . '</em></p>';
+		echo '</div>';
 	}
 
     /**

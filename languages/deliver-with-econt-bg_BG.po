@@ -185,5 +185,118 @@ msgstr "Доставка до адрес:"
 msgid "Calculating..."
 msgstr "Изчисляване..."
 
+# New translations for field hiding feature (v3.0.4)
+#: includes/class-delivery-with-econt-options.php:121
+msgid "Hidden Billing Fields"
+msgstr "Скрити полета за плащане"
+
+#: includes/class-delivery-with-econt-options.php:129
+msgid "Hidden Shipping Fields"
+msgstr "Скрити полета за доставка"
+
+#: includes/class-delivery-with-econt-options.php:137
+msgid "Custom Hidden Selectors"
+msgstr "Персонализирани селектори за скриване"
+
+#: includes/class-delivery-with-econt-options.php:
+msgid "First Name"
+msgstr "Име"
+
+#: includes/class-delivery-with-econt-options.php:
+msgid "Last Name"
+msgstr "Фамилия"
+
+#: includes/class-delivery-with-econt-options.php:
+msgid "Company"
+msgstr "Фирма"
+
+#: includes/class-delivery-with-econt-options.php:
+msgid "Country"
+msgstr "Държава"
+
+#: includes/class-delivery-with-econt-options.php:
+msgid "Address 1"
+msgstr "Адрес 1"
+
+#: includes/class-delivery-with-econt-options.php:
+msgid "Address 2"
+msgstr "Адрес 2"
+
+#: includes/class-delivery-with-econt-options.php:
+msgid "City"
+msgstr "Град"
+
+#: includes/class-delivery-with-econt-options.php:
+msgid "State/Region"
+msgstr "Област/Регион"
+
+#: includes/class-delivery-with-econt-options.php:
+msgid "Postcode"
+msgstr "Пощенски код"
+
+#: includes/class-delivery-with-econt-options.php:
+msgid "Phone"
+msgstr "Телефон"
+
+#: includes/class-delivery-with-econt-options.php:
+msgid "Email"
+msgstr "Имейл"
+
+#: includes/class-delivery-with-econt-options.php:
+msgid "Select billing fields to hide when Econt shipping is selected"
+msgstr "Изберете полета за плащане, които да се скрият, когато е избрана доставка с Еконт"
+
+#: includes/class-delivery-with-econt-options.php:
+msgid "Select shipping fields to hide when Econt shipping is selected"
+msgstr "Изберете полета за доставка, които да се скрият, когато е избрана доставка с Еконт"
+
+#: includes/class-delivery-with-econt-options.php:
+msgid "About this setting:"
+msgstr "За тази настройка:"
+
+#: includes/class-delivery-with-econt-options.php:
+msgid "Select the billing fields you want to hide on the checkout page when Econt shipping method is selected. These fields will be filled automatically from the Econt delivery form. If no fields are selected, the entire billing section will be hidden (legacy behavior)."
+msgstr "Изберете полетата за плащане, които искате да скриете на страницата за поръчка, когато е избран метод на доставка Еконт. Тези полета ще бъдат попълнени автоматично от формата за доставка на Еконт. Ако не са избрани полета, целият раздел за плащане ще бъде скрит (предишно поведение)."
+
+#: includes/class-delivery-with-econt-options.php:
+msgid "Recommended fields to hide: First Name, Last Name, Country, Address 1, City, State/Region, Phone"
+msgstr "Препоръчани полета за скриване: Име, Фамилия, Държава, Адрес 1, Град, Област/Регион, Телефон"
+
+#: includes/class-delivery-with-econt-options.php:
+msgid "Select the shipping fields you want to hide on the checkout page when Econt shipping method is selected. These fields will be filled automatically from the Econt delivery form."
+msgstr "Изберете полетата за доставка, които искате да скриете на страницата за поръчка, когато е избран метод на доставка Еконт. Тези полета ще бъдат попълнени автоматично от формата за доставка на Еконт."
+
+#: includes/class-delivery-with-econt-options.php:
+msgid "Note: Only applicable if \"Ship to a different address\" option is enabled on your checkout."
+msgstr "Забележка: Приложимо само ако опцията \"Доставка на различен адрес\" е активирана във вашата поръчка."
+
+#: includes/class-delivery-with-econt-options.php:
+msgid "Advanced Setting - For Theme Customization:"
+msgstr "Разширена настройка - За персонализация на темата:"
+
+#: includes/class-delivery-with-econt-options.php:
+msgid "Enter custom CSS selectors (one per line) for additional fields to hide when Econt shipping is selected. This is useful when your theme adds custom checkout fields or uses custom field wrappers."
+msgstr "Въведете персонализирани CSS селектори (по един на ред) за допълнителни полета за скриване, когато е избрана доставка с Еконт. Това е полезно, когато темата ви добавя персонализирани полета за поръчка или използва персонализирани обвивки на полета."
+
+#: includes/class-delivery-with-econt-options.php:
+msgid "Examples:"
+msgstr "Примери:"
+
+#: includes/class-delivery-with-econt-options.php:
+msgid "Hides elements with this class"
+msgstr "Скрива елементи с този клас"
+
+#: includes/class-delivery-with-econt-options.php:
+msgid "Hides element with this ID"
+msgstr "Скрива елемент с този ID"
+
+#: includes/class-delivery-with-econt-options.php:
+msgid "Hides specific field in Elementor checkout"
+msgstr "Скрива конкретно поле в Elementor поръчка"
+
+#: includes/class-delivery-with-econt-options.php:
+msgid "Note: Use browser developer tools to inspect your checkout page and find the correct selectors."
+msgstr "Забележка: Използвайте инструментите за разработчици на браузъра, за да инспектирате страницата си за поръчка и да намерите правилните селектори."
+
 #~ msgid "Confirm"
 #~ msgstr "Потвърди"
