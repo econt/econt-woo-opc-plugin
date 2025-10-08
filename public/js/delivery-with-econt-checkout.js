@@ -17,6 +17,41 @@ jQuery(document).ready(function($){
 		};
 	}
 
+	// Helper function to get field configuration
+	function getFieldConfig() {
+		return window.econtFieldConfig || {
+			customSelectors: getCustomSelectors(),
+			hiddenBillingFields: [],
+			hiddenShippingFields: [],
+			customHiddenSelectors: []
+		};
+	}
+
+	// Build field selectors based on configuration
+	function buildFieldSelectors() {
+		const config = getFieldConfig();
+		const selectors = [];
+
+		// Add billing field selectors
+		config.hiddenBillingFields.forEach(function(field) {
+			selectors.push('#billing_' + field + '_field');
+		});
+
+		// Add shipping field selectors
+		config.hiddenShippingFields.forEach(function(field) {
+			selectors.push('#shipping_' + field + '_field');
+		});
+
+		// Add custom selectors
+		if (config.customHiddenSelectors && config.customHiddenSelectors.length > 0) {
+			config.customHiddenSelectors.forEach(function(selector) {
+				selectors.push(selector);
+			});
+		}
+
+		return selectors;
+	}
+
 	// Initialize shipping method toggle
 	function initializeShippingMethodToggle() {
 		// Check initial shipping method and set appropriate display
@@ -37,10 +72,18 @@ jQuery(document).ready(function($){
 	function toggleFieldsBasedOnShippingMethod() {
 		const customSelectors = getCustomSelectors();
 		const customerDetailsElement = $(customSelectors.customerDetails);
+		const fieldSelectors = buildFieldSelectors();
 
 		if (checkIfShippingMethodIsEcont()) {
-			// Hide default WooCommerce fields when Econt is selected
-			customerDetailsElement.hide();
+			// Hide specific fields based on configuration
+			if (fieldSelectors.length > 0) {
+				fieldSelectors.forEach(function(selector) {
+					$(selector).hide().addClass('econt-hidden-field');
+				});
+			} else {
+				// Fallback: hide entire customer details if no specific fields configured
+				customerDetailsElement.hide();
+			}
 
 			// Move additional fields if they exist
 			if (customerDetailsElement.find('.woocommerce-additional-fields').length) {
@@ -57,8 +100,15 @@ jQuery(document).ready(function($){
 			// Load Econt iframe
 			getDataFromForm(use_shipping).then();
 		} else {
-			// Show default WooCommerce fields for other shipping methods
-			customerDetailsElement.show();
+			// Show hidden fields for other shipping methods
+			if (fieldSelectors.length > 0) {
+				fieldSelectors.forEach(function(selector) {
+					$(selector).show().removeClass('econt-hidden-field');
+				});
+			} else {
+				// Fallback: show entire customer details if no specific fields configured
+				customerDetailsElement.show();
+			}
 
 			// Hide Econt iframe container
 			$("#place_iframe_here").hide();
@@ -195,7 +245,8 @@ jQuery(document).ready(function($){
 			$("#delivery_with_econt_calculate_shipping").css('display', 'grid');
 		}
 
-		$(".woocommerce-checkout-review-order ul")[0].style.margin = 0;
+		$(".woocommerce-checkout-review-order ul").css('margin', 0);
+
 	});
 
 	// Helper function to get selected shipping method

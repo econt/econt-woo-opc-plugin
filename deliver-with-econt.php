@@ -12,7 +12,7 @@
  * Plugin Name:       Econt Delivery OneCheckout
  * Plugin URI:        https://econt.com/developers/
  * Description:       Econt Shipping Module
- * Version:           3.0.3
+ * Version:           3.0.4
  * Author:            Econt Express LTD.
  * Author URI:        https://econt.com/developers/
  * License:           GPL-2.0+
@@ -87,8 +87,16 @@ function is_using_block_checkout() {
 	$has_checkout_block     = has_block( 'woocommerce/checkout', $checkout_post->post_content );
 	$contains_block_pattern = ( strpos( $checkout_post->post_content, '<!-- wp:woocommerce/checkout' ) !== false );
 
-	return $has_checkout_block || $contains_block_pattern;
+	// Check for Elementor
+	$is_elementor = get_post_meta( $current_page_id, '_elementor_edit_mode', true ) === 'builder';
+
+	// Check for 10Web Builder
+	$is_10web = get_post_meta( $current_page_id, '_ai_builder_enabled', true ) ||
+	            get_post_meta( $current_page_id, '_10web_builder', true );
+
+	return $has_checkout_block || $contains_block_pattern || $is_elementor || $is_10web;
 }
+
 
 function is_block_based_cart() {
 	if (!is_cart()) {
@@ -112,7 +120,6 @@ function is_block_based_cart() {
 // Move initialization to a later hook that runs when the page is being rendered
 if ( ! function_exists( 'econt_init_blocks' ) ) {
 	function econt_init_blocks() {
-
 		// Only load blocks if we're on the checkout page and using block checkout
 		if ( ( is_checkout() && is_using_block_checkout() ) || ( is_cart() && is_block_based_cart() )) {
 			require_once ECONT_PLUGIN_DIR . 'includes/class-econt-blocks.php';

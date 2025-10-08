@@ -115,6 +115,30 @@ class Delivery_With_Econt_Options
 		    'delivery-with-econt-settings',
 		    'setting_section_id'
 	    );
+
+	    add_settings_field(
+		    'hidden_billing_fields',
+		    __('Hidden Billing Fields', 'deliver-with-econt'),
+		    array($this, 'hidden_billing_fields_callback'),
+		    'delivery-with-econt-settings',
+		    'setting_section_id'
+	    );
+
+	    add_settings_field(
+		    'hidden_shipping_fields',
+		    __('Hidden Shipping Fields', 'deliver-with-econt'),
+		    array($this, 'hidden_shipping_fields_callback'),
+		    'delivery-with-econt-settings',
+		    'setting_section_id'
+	    );
+
+	    add_settings_field(
+		    'custom_hidden_selectors',
+		    __('Custom Hidden Selectors', 'deliver-with-econt'),
+		    array($this, 'custom_hidden_selectors_callback'),
+		    'delivery-with-econt-settings',
+		    'setting_section_id'
+	    );
     }
 
     /**
@@ -131,6 +155,22 @@ class Delivery_With_Econt_Options
 
 	    if (isset($input['customer_details_selector'])) {
 		    $new_input['customer_details_selector'] = sanitize_text_field($input['customer_details_selector']);
+	    }
+
+	    if (isset($input['hidden_billing_fields'])) {
+		    $new_input['hidden_billing_fields'] = is_array($input['hidden_billing_fields'])
+			    ? array_map('sanitize_text_field', $input['hidden_billing_fields'])
+			    : array();
+	    }
+
+	    if (isset($input['hidden_shipping_fields'])) {
+		    $new_input['hidden_shipping_fields'] = is_array($input['hidden_shipping_fields'])
+			    ? array_map('sanitize_text_field', $input['hidden_shipping_fields'])
+			    : array();
+	    }
+
+	    if (isset($input['custom_hidden_selectors'])) {
+		    $new_input['custom_hidden_selectors'] = sanitize_textarea_field($input['custom_hidden_selectors']);
 	    }
 
         if ($input['private_key'] != $this->options['private_key']) {
@@ -188,6 +228,86 @@ class Delivery_With_Econt_Options
 			'<input type="text" id="customer_details_selector" name="delivery_with_econt_settings[customer_details_selector]" value="%s" placeholder="#customer_details" style="width: 300px;" /><br><small>%s</small>',
 			isset( $this->options['customer_details_selector'] ) ? esc_attr( $this->options['customer_details_selector']) : '',
 			__('CSS selector for the main customer details container (billing/shipping fields)', 'deliver-with-econt')
+		);
+	}
+
+	/**
+	 * Hidden Billing Fields callback
+	 */
+	public function hidden_billing_fields_callback()
+	{
+		$available_fields = array(
+			'first_name' => __('First Name', 'deliver-with-econt'),
+			'last_name' => __('Last Name', 'deliver-with-econt'),
+			'company' => __('Company', 'deliver-with-econt'),
+			'country' => __('Country', 'deliver-with-econt'),
+			'address_1' => __('Address 1', 'deliver-with-econt'),
+			'address_2' => __('Address 2', 'deliver-with-econt'),
+			'city' => __('City', 'deliver-with-econt'),
+			'state' => __('State/Region', 'deliver-with-econt'),
+			'postcode' => __('Postcode', 'deliver-with-econt'),
+			'phone' => __('Phone', 'deliver-with-econt'),
+			'email' => __('Email', 'deliver-with-econt'),
+		);
+
+		$selected_fields = isset($this->options['hidden_billing_fields']) ? $this->options['hidden_billing_fields'] : array();
+
+		echo '<div style="margin-bottom: 10px;">';
+		foreach ($available_fields as $field_key => $field_label) {
+			$checked = in_array($field_key, $selected_fields) ? 'checked' : '';
+			printf(
+				'<label style="display: block; margin-bottom: 5px;"><input type="checkbox" name="delivery_with_econt_settings[hidden_billing_fields][]" value="%s" %s /> %s</label>',
+				esc_attr($field_key),
+				$checked,
+				esc_html($field_label)
+			);
+		}
+		echo '</div>';
+		echo '<small>' . __('Select billing fields to hide when Econt shipping is selected', 'deliver-with-econt') . '</small>';
+	}
+
+	/**
+	 * Hidden Shipping Fields callback
+	 */
+	public function hidden_shipping_fields_callback()
+	{
+		$available_fields = array(
+			'first_name' => __('First Name', 'deliver-with-econt'),
+			'last_name' => __('Last Name', 'deliver-with-econt'),
+			'company' => __('Company', 'deliver-with-econt'),
+			'country' => __('Country', 'deliver-with-econt'),
+			'address_1' => __('Address 1', 'deliver-with-econt'),
+			'address_2' => __('Address 2', 'deliver-with-econt'),
+			'city' => __('City', 'deliver-with-econt'),
+			'state' => __('State/Region', 'deliver-with-econt'),
+			'postcode' => __('Postcode', 'deliver-with-econt'),
+		);
+
+		$selected_fields = isset($this->options['hidden_shipping_fields']) ? $this->options['hidden_shipping_fields'] : array();
+
+		echo '<div style="margin-bottom: 10px;">';
+		foreach ($available_fields as $field_key => $field_label) {
+			$checked = in_array($field_key, $selected_fields) ? 'checked' : '';
+			printf(
+				'<label style="display: block; margin-bottom: 5px;"><input type="checkbox" name="delivery_with_econt_settings[hidden_shipping_fields][]" value="%s" %s /> %s</label>',
+				esc_attr($field_key),
+				$checked,
+				esc_html($field_label)
+			);
+		}
+		echo '</div>';
+		echo '<small>' . __('Select shipping fields to hide when Econt shipping is selected', 'deliver-with-econt') . '</small>';
+	}
+
+	/**
+	 * Custom Hidden Selectors callback
+	 */
+	public function custom_hidden_selectors_callback()
+	{
+		printf(
+			'<textarea id="custom_hidden_selectors" name="delivery_with_econt_settings[custom_hidden_selectors]" rows="5" style="width: 100%%; max-width: 600px;">%s</textarea><br><small>%s</small>',
+			isset($this->options['custom_hidden_selectors']) ? esc_textarea($this->options['custom_hidden_selectors']) : '',
+			__('Enter custom CSS selectors (one per line) for fields to hide when Econt is selected. For example: .custom-field-wrapper or #special_field_row', 'deliver-with-econt')
 		);
 	}
 

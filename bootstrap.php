@@ -201,18 +201,36 @@ function delivery_with_econt_enque_scripts_and_styles() {
 			: '#customer_details',
 	);
 
+	// Prepare hidden fields configuration
+	$hidden_billing_fields = isset($options['hidden_billing_fields']) ? $options['hidden_billing_fields'] : array();
+	$hidden_shipping_fields = isset($options['hidden_shipping_fields']) ? $options['hidden_shipping_fields'] : array();
+	$custom_hidden_selectors = isset($options['custom_hidden_selectors']) ? $options['custom_hidden_selectors'] : '';
+
+	// Convert custom selectors string to array (one per line)
+	$custom_selectors_array = array_filter(array_map('trim', explode("\n", $custom_hidden_selectors)));
+
+	$econt_field_config = array(
+		'customSelectors' => $custom_selectors,
+		'hiddenBillingFields' => $hidden_billing_fields,
+		'hiddenShippingFields' => $hidden_shipping_fields,
+		'customHiddenSelectors' => $custom_selectors_array,
+	);
 
 	wp_enqueue_style('delivery_with_econt_calculate_shipping', plugin_dir_url(__FILE__) . 'public/css/delivery-with-econt-checkout.css', [], false);
 	wp_enqueue_script('delivery_with_econt_calculate_shipping', plugin_dir_url(__FILE__) . 'public/js/delivery-with-econt-checkout.js', ['jquery'], false, true);
 	//wp_localize_script( 'delivery_with_econt_calculate_shipping', 'delivery_with_econt_calculate_shipping_object', array('ajax_url' => admin_url('admin-ajax.php'), 'security'  => wp_create_nonce( 'delivery-with-econt-security-nonce' )));
 	wp_localize_script('delivery_with_econt_calculate_shipping', 'delivery_with_econt_calculate_shipping_object', ['delivery_url' => Delivery_With_Econt_Shipping::get_delivery_url(), 'ajax_url' => admin_url('admin-ajax.php'), 'security' => wp_create_nonce('delivery-with-econt-security-nonce')]);
 
-// Output custom selectors to JavaScript
+	// Output custom selectors to JavaScript (backward compatibility)
 	wp_localize_script('delivery_with_econt_calculate_shipping', 'econtCustomSelectors', $custom_selectors);
+
+	// Output field configuration to JavaScript
+	wp_localize_script('delivery_with_econt_calculate_shipping', 'econtFieldConfig', $econt_field_config);
 
 	// Also make it available globally for React components
 	wp_add_inline_script('delivery_with_econt_calculate_shipping',
-		'window.econtCustomSelectors = ' . wp_json_encode($custom_selectors) . ';',
+		'window.econtCustomSelectors = ' . wp_json_encode($custom_selectors) . ';' .
+		'window.econtFieldConfig = ' . wp_json_encode($econt_field_config) . ';',
 		'before'
 	);
 }

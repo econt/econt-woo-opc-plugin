@@ -153,6 +153,7 @@ foreach ($required_fields as $field) {
 - Econt не се показва в блоковия checkout
 - JavaScript грешки в конзолата
 - Iframe не се зарежда
+- Econt полетата не се показват правилно
 
 #### Диагностика:
 ```php
@@ -160,7 +161,7 @@ foreach ($required_fields as $field) {
 if (is_using_block_checkout()) {
     echo 'Използва блокови checkout';
 } else {
-    echo 'Използва класически checkout';  
+    echo 'Използва класически checkout';
 }
 
 // Проверете дали checkout блока е правилно конфигуриран
@@ -187,6 +188,30 @@ if (has_block('woocommerce/checkout', $checkout_page->post_content)) {
 </div>
 <!-- /wp:woocommerce/checkout -->
 ```
+
+**✅ Конфигурирайте Customer Details Container:**
+
+Ако вашата тема или page builder използва различна структура на checkout формата, може да се наложи да конфигурирате CSS селектора за контейнера с полета за доставка:
+
+1. **Отидете в:** WordPress Admin → Настройки → Econt Доставка
+2. **Намерете:** Полето "Customer Details Container"
+3. **Въведете правилния CSS селектор:**
+   - По подразбиране: `#customer_details`
+   - За персонализирани теми: `.woocommerce-checkout`, `#checkout-form`, `.checkout-wrapper`
+
+**Как да намерите правилния селектор:**
+```javascript
+// Отворете Developer Console (F12) на checkout страницата
+// Намерете контейнера с полетата за доставка и копирайте неговия ID или class
+document.querySelector('#customer_details'); // Стандартен WooCommerce
+document.querySelector('.your-custom-selector'); // Вашата тема
+```
+
+**Често използвани селектори:**
+- Стандартен WooCommerce: `#customer_details`
+- Elementor: `.elementor-widget-woocommerce-checkout-page`
+- Divi: `.et_pb_wc_checkout_billing`
+- Custom теми: Инспектирайте HTML кода на checkout страницата
 
 **✅ Изчистете кеша:**
 ```php
