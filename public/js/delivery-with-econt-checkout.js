@@ -330,21 +330,17 @@ jQuery(document).ready(function($){
 			}
 
 			// Fill in form fields with received data
-			if (document.getElementById((use_shipping ? 'shipping' : 'billing') + '_first_name'))
-				document.getElementById((use_shipping ? 'shipping' : 'billing') + '_first_name').value = full_name[0] ? full_name[0] : '';
-			if (document.getElementById((use_shipping ? 'shipping' : 'billing') + '_last_name'))
-				document.getElementById((use_shipping ? 'shipping' : 'billing') + '_last_name').value = full_name[1] ? full_name[1] : '';
-			if (document.getElementById((use_shipping ? 'shipping' : 'billing') + '_company'))
-				document.getElementById((use_shipping ? 'shipping' : 'billing') + '_company').value = company;
-			if (document.getElementById((use_shipping ? 'shipping' : 'billing') + '_address_1'))
-				document.getElementById((use_shipping ? 'shipping' : 'billing') + '_address_1').value = data['address'] != '' ? addressText + data['address'] : officeText + data['office_name_only'];
-			if (document.getElementById((use_shipping ? 'shipping' : 'billing') + '_city'))
-				document.getElementById((use_shipping ? 'shipping' : 'billing') + '_city').value = data['city_name'];
-			if (document.getElementById((use_shipping ? 'shipping' : 'billing') + '_postcode'))
-				document.getElementById((use_shipping ? 'shipping' : 'billing') + '_postcode').value = data['post_code'];
+			var prefix = (use_shipping ? 'shipping' : 'billing');
 
-			// Handle state selection
-			var $state = jQuery("#" + (use_shipping ? 'shipping' : 'billing') + '_state');
+			setFieldValue(prefix + '_first_name', full_name[0] || '');
+			setFieldValue(prefix + '_last_name', full_name[1] || '');
+			setFieldValue(prefix + '_company', company);
+			setFieldValue(prefix + '_address_1', data['address'] != '' ? addressText + data['address'] : officeText + data['office_name_only']);
+			setFieldValue(prefix + '_city', data['city_name']);
+			setFieldValue(prefix + '_postcode', data['post_code']);
+
+// Handle state selection (keep existing code)
+			var $state = jQuery("#" + prefix + '_state');
 			if ($state.length) {
 				$state.find("option").each(function() {
 					var $this = jQuery(this);
@@ -359,10 +355,8 @@ jQuery(document).ready(function($){
 				$state.change();
 			}
 
-			if (document.getElementById('billing_phone'))
-				document.getElementById('billing_phone').value = data['phone'];
-			if (document.getElementById('billing_email'))
-				document.getElementById('billing_email').value = data['email'];
+			setFieldValue('billing_phone', data['phone']);
+			setFieldValue('billing_email', data['email']);
 
 			document.cookie = "econt_customer_info_id=" + data['id'] + "; path=/";
 
@@ -540,4 +534,11 @@ function getCookie(name) {
 	const parts = value.split(`; ${name}=`);
 	if (parts.length === 2) return parts.pop().split(';').shift();
 	return null;
+}
+
+function setFieldValue(fieldId, value) {
+	var $field = jQuery('#' + fieldId);
+	if ($field.length) {
+		$field.val(value).trigger('change').trigger('input');
+	}
 }
