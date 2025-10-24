@@ -88,18 +88,18 @@ class Delivery_With_Econt_Shipping extends WC_Shipping_Method
 	
 	public static function get_order_info()
     {
-        error_log('Getting order info');
+//        error_log('Getting order info');
         
         $url = DWEH()->get_service_url();
-        error_log('Service URL: ' . $url);
+//        error_log('Service URL: ' . $url);
         
         // Get plugin settings
         $options = get_option('delivery_with_econt_settings');
-        error_log('Plugin settings: ' . print_r($options, true));
+//        error_log('Plugin settings: ' . print_r($options, true));
         
         // Get parameters from request
         $params = isset($_POST['params']) ? $_POST['params'] : array();
-        error_log('Request params: ' . print_r($params, true));
+//        error_log('Request params: ' . print_r($params, true));
         
         // Get cart data
         $econt_cart = WC()->cart->get_cart();

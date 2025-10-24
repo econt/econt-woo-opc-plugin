@@ -11,8 +11,8 @@
   "author": "",
   "license": "GPL-2.0-or-later",
   "devDependencies": {
-    "@wordpress/scripts": "^26.0.0",
-    "@wordpress/env": "^8.2.0"
+    "@wordpress/env": "^8.2.0",
+    "@wordpress/scripts": "^26.0.0"
   },
   "dependencies": {
     "@woocommerce/components": "^11.0.0",

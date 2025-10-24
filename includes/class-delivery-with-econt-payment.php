@@ -42,6 +42,25 @@ class Delivery_With_Econt_Payment extends WC_Payment_Gateway {
             )
         );
     }
+
+	/**
+	 * Check if payment gateway is available
+	 *
+	 * @return bool
+	 */
+	public function is_available() {
+		// First check parent availability
+		if (!parent::is_available()) {
+			return false;
+		}
+
+		// Don't show payment gateway if cart contains only virtual products
+		if (DWEH()->cart_contains_only_virtual_products()) {
+			return false;
+		}
+
+		return true;
+	}
     public function admin_options() {
 	    parent::admin_options();
 

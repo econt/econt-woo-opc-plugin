@@ -102,18 +102,13 @@ add_action('woocommerce_shipping_init', 'econt_shipping_method_init');
  * @return array
  */
 function add_econt_payment_gateway($gateways) {
-	// Don't add payment gateway if cart contains only virtual products
-	if (DWEH()->cart_contains_only_virtual_products()) {
-		return $gateways;
-	}
-
 	if ((
 			defined('WP_ADMIN') && WP_ADMIN)
 		|| (!WC()->session || @WC()->session->get('chosen_shipping_methods')[0] == 'delivery_with_econt') && get_woocommerce_currency() === "BGN"
 	) {
 		$gateways['econt_payment'] = Delivery_With_Econt_Payment::class;
 	}
-	
+
 	return $gateways;
 }
 
@@ -154,7 +149,7 @@ function delivery_with_econt_get_order_info() {
 		wp_die();
 	}
 
-	error_log('Received order info request with params: ' . print_r($_POST['params'], true));
+//	error_log('Received order info request with params: ' . print_r($_POST['params'], true));
 	
 	Delivery_With_Econt_Shipping::get_order_info();
 }
