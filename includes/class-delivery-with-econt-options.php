@@ -68,7 +68,7 @@ class Delivery_With_Econt_Options
      * Register and add settings
      */
     public function page_init()
-    {        
+    {
         // dd('a');
         $this->options = get_option( 'delivery_with_econt_settings' );
         register_setting(
@@ -77,29 +77,46 @@ class Delivery_With_Econt_Options
             array( $this, 'sanitize' ) // Sanitize
         );
 
+        // Status Check Section
+        add_settings_section(
+            'status_section_id',
+            __('Plugin Status Check', 'deliver-with-econt'),
+            array( $this, 'print_status_section_info' ),
+            'delivery-with-econt-settings'
+        );
+
+        add_settings_field(
+            'plugin_status_display',
+            __('System Status', 'deliver-with-econt'),
+            array( $this, 'plugin_status_display_callback' ),
+            'delivery-with-econt-settings',
+            'status_section_id'
+        );
+
+        // Original Settings Section
         add_settings_section(
             'setting_section_id', // ID
             __('Econt Delivery Shop Settings', 'deliver-with-econt'), // Title
             array( $this, 'print_section_info' ), // Callback
             'delivery-with-econt-settings' // Page
-        );  
+        );
 
         add_settings_field(
             'store_id', // ID
-            __('ID Number', 'deliver-with-econt'), // Title 
+            __('ID Number', 'deliver-with-econt'), // Title
             array( $this, 'id_number_callback' ), // Callback
             'delivery-with-econt-settings', // Page
             'setting_section_id' // Section
-        );      
+        );
 
         add_settings_field(
-            'private_key', 
-            __('Private Key', 'deliver-with-econt'), 
-            array( $this, 'title_callback' ), 
-            'delivery-with-econt-settings', 
+            'private_key',
+            __('Private Key', 'deliver-with-econt'),
+            array( $this, 'title_callback' ),
+            'delivery-with-econt-settings',
             'setting_section_id'
-        );    
-        
+        );
+
         add_settings_field(
             'demo_service',
             __('Use Econt Demo Service', 'deliver-with-econt'),
@@ -329,6 +346,627 @@ class Delivery_With_Econt_Options
 		echo '</ul>';
 		echo '<p style="margin: 5px 0 0 0;"><em>' . __('Note: Use browser developer tools to inspect your checkout page and find the correct selectors.', 'deliver-with-econt') . '</em></p>';
 		echo '</div>';
+	}
+
+	/**
+	 * Print the Status Section text
+	 */
+	public function print_status_section_info()
+	{
+		_e('Check the status and configuration of your Econt plugin installation:', 'deliver-with-econt');
+		echo '<p style="margin-top: 10px;">';
+		echo '<a href="' . plugin_dir_url(dirname(__FILE__)) . 'docs/Status-Check.md" target="_blank" class="button button-secondary">';
+		echo '📖 ' . __('View Full Documentation', 'deliver-with-econt');
+		echo '</a>';
+		echo '</p>';
+	}
+
+	/**
+	 * Display plugin status information
+	 */
+	public function plugin_status_display_callback()
+	{
+		// Get plugin data
+		if (!function_exists('get_plugin_data')) {
+			require_once(ABSPATH . 'wp-admin/includes/plugin.php');
+		}
+
+		// Get the plugin file path correctly
+		// __FILE__ is in includes/class-delivery-with-econt-options.php
+		// We need to go up to the plugin root directory
+		$plugin_file = plugin_dir_path(dirname(__FILE__)) . 'deliver-with-econt.php';
+
+		$plugin_data = get_plugin_data($plugin_file);
+		$plugin_version = isset($plugin_data['Version']) ? $plugin_data['Version'] : __('Unknown', 'deliver-with-econt');
+
+		// Get all shipping methods
+		$shipping_methods = $this->get_shipping_methods_status();
+
+		// Get all payment methods
+		$payment_methods = $this->get_payment_methods_status();
+
+		// Get checkout page info
+		$checkout_info = $this->get_checkout_page_info();
+
+		?>
+		<div class="econt-status-container" style="max-width: 800px;">
+			<style>
+				.econt-status-table {
+					width: 100%;
+					border-collapse: collapse;
+					margin-bottom: 20px;
+					background: #fff;
+					box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+				}
+				.econt-status-table th,
+				.econt-status-table td {
+					padding: 12px;
+					text-align: left;
+					border-bottom: 1px solid #e5e5e5;
+				}
+				.econt-status-table th {
+					background: #f9f9f9;
+					font-weight: 600;
+					width: 30%;
+				}
+				.econt-status-table tr:last-child td {
+					border-bottom: none;
+				}
+				.econt-status-badge {
+					display: inline-block;
+					padding: 3px 8px;
+					border-radius: 3px;
+					font-size: 11px;
+					font-weight: 600;
+					text-transform: uppercase;
+				}
+				.econt-status-badge.success {
+					background: #d4edda;
+					color: #155724;
+				}
+				.econt-status-badge.warning {
+					background: #fff3cd;
+					color: #856404;
+				}
+				.econt-status-badge.error {
+					background: #f8d7da;
+					color: #721c24;
+				}
+				.econt-status-badge.info {
+					background: #d1ecf1;
+					color: #0c5460;
+				}
+				.econt-check-weight-btn {
+					margin-top: 10px;
+				}
+				#econt-weight-check-result {
+					margin-top: 10px;
+					padding: 10px;
+					border-radius: 4px;
+					display: none;
+				}
+				#econt-weight-check-result.success {
+					background: #d4edda;
+					border: 1px solid #c3e6cb;
+					color: #155724;
+				}
+				#econt-weight-check-result.error {
+					background: #f8d7da;
+					border: 1px solid #f5c6cb;
+					color: #721c24;
+				}
+				#econt-weight-check-result.warning {
+					background: #fff3cd;
+					border: 1px solid #ffeeba;
+					color: #856404;
+				}
+				#econt-weight-check-result.info {
+					background: #d1ecf1;
+					border: 1px solid #bee5eb;
+					color: #0c5460;
+				}
+				#econt-iframe-check-result {
+					margin-top: 10px;
+					padding: 10px;
+					border-radius: 4px;
+					display: none;
+				}
+				#econt-iframe-check-result.success {
+					background: #d4edda;
+					border: 1px solid #c3e6cb;
+					color: #155724;
+				}
+				#econt-iframe-check-result.error {
+					background: #f8d7da;
+					border: 1px solid #f5c6cb;
+					color: #721c24;
+				}
+				#econt-iframe-check-result.warning {
+					background: #fff3cd;
+					border: 1px solid #ffeeba;
+					color: #856404;
+				}
+				.econt-check-item {
+					padding: 8px 12px;
+					margin: 5px 0;
+					border-radius: 3px;
+					border-left: 4px solid;
+				}
+				.econt-check-item.success {
+					background: #f0f9f4;
+					border-left-color: #28a745;
+				}
+				.econt-check-item.error {
+					background: #fef5f5;
+					border-left-color: #dc3545;
+				}
+				.econt-check-item.warning {
+					background: #fffcf0;
+					border-left-color: #ffc107;
+				}
+				.econt-check-item.info {
+					background: #f0f8ff;
+					border-left-color: #17a2b8;
+				}
+				.econt-check-item strong {
+					display: block;
+					margin-bottom: 3px;
+				}
+				.econt-check-item small {
+					opacity: 0.8;
+				}
+			</style>
+
+			<!-- Plugin Version -->
+			<table class="econt-status-table">
+				<tr>
+					<th><?php _e('Plugin Version', 'deliver-with-econt'); ?></th>
+					<td>
+						<strong><?php echo esc_html($plugin_version); ?></strong>
+					</td>
+				</tr>
+			</table>
+
+			<!-- Shipping Methods -->
+			<table class="econt-status-table">
+				<tr>
+					<th colspan="2" style="background: #2271b1; color: #fff;">
+						<?php _e('Shipping Methods', 'deliver-with-econt'); ?>
+					</th>
+				</tr>
+				<?php if (!empty($shipping_methods)): ?>
+					<?php foreach ($shipping_methods as $method): ?>
+						<tr>
+							<th><?php echo esc_html($method['title']); ?></th>
+							<td>
+								<?php if ($method['enabled']): ?>
+									<span class="econt-status-badge success"><?php _e('Enabled', 'deliver-with-econt'); ?></span>
+								<?php else: ?>
+									<span class="econt-status-badge error"><?php _e('Disabled', 'deliver-with-econt'); ?></span>
+								<?php endif; ?>
+								<?php if (!empty($method['zones'])): ?>
+									<div style="margin-top: 5px; font-size: 12px; color: #666;">
+										<?php _e('Zones:', 'deliver-with-econt'); ?>
+										<?php echo esc_html(implode(', ', $method['zones'])); ?>
+									</div>
+								<?php endif; ?>
+							</td>
+						</tr>
+					<?php endforeach; ?>
+				<?php else: ?>
+					<tr>
+						<td colspan="2">
+							<span class="econt-status-badge warning"><?php _e('No shipping methods configured', 'deliver-with-econt'); ?></span>
+						</td>
+					</tr>
+				<?php endif; ?>
+			</table>
+
+			<!-- Payment Methods -->
+			<table class="econt-status-table">
+				<tr>
+					<th colspan="2" style="background: #2271b1; color: #fff;">
+						<?php _e('Payment Methods', 'deliver-with-econt'); ?>
+					</th>
+				</tr>
+				<?php if (!empty($payment_methods)): ?>
+					<?php foreach ($payment_methods as $method): ?>
+						<tr>
+							<th><?php echo esc_html($method['title']); ?></th>
+							<td>
+								<?php if ($method['enabled']): ?>
+									<span class="econt-status-badge success"><?php _e('Enabled', 'deliver-with-econt'); ?></span>
+									<?php if (!$method['works_with_econt']): ?>
+										<span class="econt-status-badge warning" style="margin-left: 5px;"><?php _e('Restricted', 'deliver-with-econt'); ?></span>
+									<?php endif; ?>
+								<?php else: ?>
+									<span class="econt-status-badge error"><?php _e('Disabled', 'deliver-with-econt'); ?></span>
+								<?php endif; ?>
+
+								<?php if ($method['enabled'] && !empty($method['restriction_note'])): ?>
+									<div style="margin-top: 5px; font-size: 12px; color: #856404;">
+										<strong><?php _e('Warning:', 'deliver-with-econt'); ?></strong> <?php echo esc_html($method['restriction_note']); ?>
+									</div>
+								<?php endif; ?>
+
+								<?php if ($method['enabled'] && $method['works_with_econt'] && !empty($method['enable_for_methods'])): ?>
+									<div style="margin-top: 5px; font-size: 12px; color: #666;">
+										<?php _e('Available for Econt shipping', 'deliver-with-econt'); ?>
+									</div>
+								<?php endif; ?>
+							</td>
+						</tr>
+					<?php endforeach; ?>
+				<?php else: ?>
+					<tr>
+						<td colspan="2">
+							<span class="econt-status-badge warning"><?php _e('No payment methods configured', 'deliver-with-econt'); ?></span>
+						</td>
+					</tr>
+				<?php endif; ?>
+			</table>
+
+			<!-- Checkout Page Info -->
+			<table class="econt-status-table">
+				<tr>
+					<th colspan="2" style="background: #2271b1; color: #fff;">
+						<?php _e('Checkout Page Configuration', 'deliver-with-econt'); ?>
+					</th>
+				</tr>
+				<tr>
+					<th><?php _e('Checkout Page', 'deliver-with-econt'); ?></th>
+					<td>
+						<?php if ($checkout_info['exists']): ?>
+							<span class="econt-status-badge success"><?php _e('Found', 'deliver-with-econt'); ?></span>
+							<a href="<?php echo esc_url($checkout_info['edit_url']); ?>" class="button button-small" style="margin-left: 10px;">
+								<?php _e('Edit Page', 'deliver-with-econt'); ?>
+							</a>
+						<?php else: ?>
+							<span class="econt-status-badge error"><?php _e('Not Found', 'deliver-with-econt'); ?></span>
+						<?php endif; ?>
+					</td>
+				</tr>
+				<?php if ($checkout_info['exists']): ?>
+					<tr>
+						<th><?php _e('Page Builder', 'deliver-with-econt'); ?></th>
+						<td>
+							<span class="econt-status-badge info"><?php echo esc_html($checkout_info['builder']); ?></span>
+						</td>
+					</tr>
+					<tr>
+						<th><?php _e('Checkout Form Type', 'deliver-with-econt'); ?></th>
+						<td>
+							<span class="econt-status-badge info"><?php echo esc_html($checkout_info['form_type']); ?></span>
+						</td>
+					</tr>
+				<?php endif; ?>
+			</table>
+
+			<!-- Product Weight Check -->
+			<table class="econt-status-table">
+				<tr>
+					<th colspan="2" style="background: #2271b1; color: #fff;">
+						<?php _e('Product Weight Verification', 'deliver-with-econt'); ?>
+					</th>
+				</tr>
+				<tr>
+					<td colspan="2">
+						<p><?php _e('Check if all products have weight configured (required for accurate shipping calculations):', 'deliver-with-econt'); ?></p>
+						<button type="button" class="button button-primary econt-check-weight-btn" id="econt-check-weight">
+							<?php _e('Check All Products Weight', 'deliver-with-econt'); ?>
+						</button>
+						<span class="spinner" id="econt-weight-spinner" style="float: none; margin-left: 10px;"></span>
+						<div id="econt-weight-check-result"></div>
+					</td>
+				</tr>
+			</table>
+
+			<!-- Checkout Page Iframe Check -->
+			<table class="econt-status-table">
+				<tr>
+					<th colspan="2" style="background: #2271b1; color: #fff;">
+						<?php _e('Checkout Page Integration Check', 'deliver-with-econt'); ?>
+					</th>
+				</tr>
+				<tr>
+					<td colspan="2">
+						<p><?php _e('Verify that the Econt iframe container and required assets are loaded on the checkout page:', 'deliver-with-econt'); ?></p>
+						<button type="button" class="button button-primary econt-check-iframe-btn" id="econt-check-iframe">
+							<?php _e('Check Checkout Page Integration', 'deliver-with-econt'); ?>
+						</button>
+						<span class="spinner" id="econt-iframe-spinner" style="float: none; margin-left: 10px;"></span>
+						<div id="econt-iframe-check-result"></div>
+					</td>
+				</tr>
+			</table>
+		</div>
+
+		<script type="text/javascript">
+		jQuery(document).ready(function($) {
+			var currentBatch = 0;
+			var isProcessing = false;
+
+			function processBatch() {
+				$.ajax({
+					url: ajaxurl,
+					type: 'POST',
+					data: {
+						action: 'econt_check_products_weight',
+						security: '<?php echo wp_create_nonce('econt_check_weight_nonce'); ?>',
+						batch: currentBatch
+					},
+					success: function(response) {
+						if (response.data.completed) {
+							// Processing complete
+							$('#econt-weight-spinner').removeClass('is-active');
+							$('#econt-check-weight').prop('disabled', false);
+							isProcessing = false;
+							currentBatch = 0;
+
+							var $result = $('#econt-weight-check-result');
+							if (response.success) {
+								$result.removeClass('error warning').addClass('success');
+								$result.html(response.data.message);
+							} else {
+								if (response.data.type === 'warning') {
+									$result.removeClass('error success').addClass('warning');
+								} else {
+									$result.removeClass('success warning').addClass('error');
+								}
+								$result.html(response.data.message);
+							}
+							$result.show();
+						} else {
+							// Continue with next batch
+							var $result = $('#econt-weight-check-result');
+							$result.removeClass('error warning success').addClass('info');
+
+							// Show progress with progress bar
+							var progressHtml = '<div style="margin-bottom: 10px;">';
+							progressHtml += '<strong>' + response.data.message + '</strong>';
+							progressHtml += '</div>';
+							progressHtml += '<div style="background: #f0f0f0; height: 20px; border-radius: 3px; overflow: hidden;">';
+							progressHtml += '<div style="background: #2271b1; height: 100%; width: ' + response.data.progress + '%; transition: width 0.3s ease;"></div>';
+							progressHtml += '</div>';
+
+							$result.html(progressHtml);
+							$result.show();
+
+							currentBatch++;
+							processBatch(); // Process next batch
+						}
+					},
+					error: function() {
+						$('#econt-weight-spinner').removeClass('is-active');
+						$('#econt-check-weight').prop('disabled', false);
+						isProcessing = false;
+						currentBatch = 0;
+
+						var $result = $('#econt-weight-check-result');
+						$result.removeClass('success warning').addClass('error');
+						$result.html('<?php _e('An error occurred while checking product weights.', 'deliver-with-econt'); ?>');
+						$result.show();
+					}
+				});
+			}
+
+			$('#econt-check-weight').on('click', function() {
+				if (isProcessing) {
+					return; // Prevent multiple clicks
+				}
+
+				var $button = $(this);
+				var $spinner = $('#econt-weight-spinner');
+				var $result = $('#econt-weight-check-result');
+
+				$button.prop('disabled', true);
+				$spinner.addClass('is-active');
+				$result.hide();
+
+				isProcessing = true;
+				currentBatch = 0;
+
+				processBatch();
+			});
+
+			// Iframe check handler
+			$('#econt-check-iframe').on('click', function() {
+				var $button = $(this);
+				var $spinner = $('#econt-iframe-spinner');
+				var $result = $('#econt-iframe-check-result');
+
+				$button.prop('disabled', true);
+				$spinner.addClass('is-active');
+				$result.hide();
+
+				$.ajax({
+					url: ajaxurl,
+					type: 'POST',
+					data: {
+						action: 'econt_check_iframe_container',
+						security: '<?php echo wp_create_nonce('econt_check_iframe_nonce'); ?>'
+					},
+					success: function(response) {
+						$spinner.removeClass('is-active');
+						$button.prop('disabled', false);
+
+						var html = '<h4>' + response.data.message + '</h4>';
+
+						if (response.data.checks && response.data.checks.length) {
+							response.data.checks.forEach(function(check) {
+								html += '<div class="econt-check-item ' + check.status + '">';
+								html += '<strong>' + check.label + '</strong>';
+								html += '<small>' + check.message + '</small>';
+								html += '</div>';
+							});
+						}
+
+						if (response.data.checkout_url) {
+							html += '<p style="margin-top: 15px;"><a href="' + response.data.checkout_url + '" target="_blank" class="button"><?php _e('View Checkout Page', 'deliver-with-econt'); ?></a></p>';
+						}
+
+						if (response.success) {
+							$result.removeClass('error warning').addClass('success');
+						} else {
+							if (response.data.type === 'warning') {
+								$result.removeClass('error success').addClass('warning');
+							} else {
+								$result.removeClass('success warning').addClass('error');
+							}
+						}
+
+						$result.html(html);
+						$result.show();
+					},
+					error: function() {
+						$spinner.removeClass('is-active');
+						$button.prop('disabled', false);
+						$result.removeClass('success warning').addClass('error');
+						$result.html('<?php _e('An error occurred while checking the checkout page.', 'deliver-with-econt'); ?>');
+						$result.show();
+					}
+				});
+			});
+		});
+		</script>
+		<?php
+	}
+
+	/**
+	 * Get shipping methods status
+	 */
+	private function get_shipping_methods_status()
+	{
+		$methods = array();
+		$shipping_zones = WC_Shipping_Zones::get_zones();
+
+		foreach ($shipping_zones as $zone) {
+			foreach ($zone['shipping_methods'] as $method) {
+				if ($method->id === 'delivery_with_econt') {
+					$methods[] = array(
+						'title' => $method->get_title(),
+						'enabled' => $method->enabled === 'yes',
+						'zones' => array($zone['zone_name'])
+					);
+				}
+			}
+		}
+
+		// Check for methods in "Rest of the World" zone
+		$zone_0 = new WC_Shipping_Zone(0);
+		foreach ($zone_0->get_shipping_methods() as $method) {
+			if ($method->id === 'delivery_with_econt') {
+				$methods[] = array(
+					'title' => $method->get_title(),
+					'enabled' => $method->enabled === 'yes',
+					'zones' => array(__('Rest of the World', 'deliver-with-econt'))
+				);
+			}
+		}
+
+		return $methods;
+	}
+
+	/**
+	 * Get payment methods status
+	 */
+	private function get_payment_methods_status()
+	{
+		$methods = array();
+		$payment_gateways = WC()->payment_gateways->payment_gateways();
+
+		foreach ($payment_gateways as $gateway) {
+			// Check if this payment method is restricted to specific shipping methods
+			$enable_for_methods = array();
+			$enable_for_virtual = true;
+
+			if (isset($gateway->enable_for_methods) && is_array($gateway->enable_for_methods)) {
+				$enable_for_methods = $gateway->enable_for_methods;
+			}
+
+			if (isset($gateway->enable_for_virtual)) {
+				$enable_for_virtual = $gateway->enable_for_virtual === 'yes';
+			}
+
+			// Determine if this gateway works with Econt shipping
+			$works_with_econt = true;
+			$restriction_note = '';
+
+			if (!empty($enable_for_methods)) {
+				// If specific methods are set, check if Econt is in the list
+				if (!in_array('delivery_with_econt', $enable_for_methods)) {
+					$works_with_econt = false;
+					$restriction_note = __('Not enabled for Econt shipping', 'deliver-with-econt');
+				}
+			}
+
+			$methods[] = array(
+				'id' => $gateway->id,
+				'title' => $gateway->get_title(),
+				'enabled' => $gateway->enabled === 'yes',
+				'works_with_econt' => $works_with_econt,
+				'restriction_note' => $restriction_note,
+				'enable_for_methods' => $enable_for_methods
+			);
+		}
+
+		return $methods;
+	}
+
+	/**
+	 * Get checkout page information
+	 */
+	private function get_checkout_page_info()
+	{
+		$checkout_page_id = wc_get_page_id('checkout');
+		$info = array(
+			'exists' => false,
+			'edit_url' => '',
+			'builder' => __('Unknown', 'deliver-with-econt'),
+			'form_type' => __('Unknown', 'deliver-with-econt')
+		);
+
+		if ($checkout_page_id && $checkout_page_id > 0) {
+			$info['exists'] = true;
+			$info['edit_url'] = get_edit_post_link($checkout_page_id);
+
+			// Detect page builder
+			$post_content = get_post_field('post_content', $checkout_page_id);
+
+			// Check for Elementor
+			if (get_post_meta($checkout_page_id, '_elementor_edit_mode', true)) {
+				$info['builder'] = 'Elementor';
+			}
+			// Check for Divi
+			elseif (get_post_meta($checkout_page_id, '_et_pb_use_builder', true) === 'on') {
+				$info['builder'] = 'Divi';
+			}
+			// Check for WPBakery
+			elseif (get_post_meta($checkout_page_id, '_wpb_vc_js_status', true)) {
+				$info['builder'] = 'WPBakery';
+			}
+			// Check for Gutenberg blocks
+			elseif (has_blocks($post_content)) {
+				$info['builder'] = 'Gutenberg';
+			}
+			// Classic Editor
+			else {
+				$info['builder'] = __('Classic Editor', 'deliver-with-econt');
+			}
+
+			// Detect checkout form type
+			if (has_block('woocommerce/checkout', $post_content)) {
+				$info['form_type'] = __('Gutenberg Block', 'deliver-with-econt');
+			} elseif (strpos($post_content, '[woocommerce_checkout]') !== false) {
+				$info['form_type'] = __('Classic Shortcode', 'deliver-with-econt');
+			} elseif (in_array($info['builder'], array('Elementor', 'Divi', 'WPBakery'))) {
+				$info['form_type'] = __('Page Builder', 'deliver-with-econt');
+			} else {
+				$info['form_type'] = __('Unknown', 'deliver-with-econt');
+			}
+		}
+
+		return $info;
 	}
 
     /**

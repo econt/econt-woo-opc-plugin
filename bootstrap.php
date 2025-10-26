@@ -789,3 +789,395 @@ function register_econt_payment_method_with_blocks() {
 }
 
 add_action('woocommerce_blocks_loaded', 'register_econt_payment_method_with_blocks');
+
+/**
+ * AJAX handler to check products weight - with batch processing support
+ */
+function econt_check_products_weight() {
+	// Verify nonce
+	check_ajax_referer('econt_check_weight_nonce', 'security');
+
+	// Check user capabilities
+	if (!current_user_can('manage_options')) {
+		wp_send_json_error(array(
+			'message' => __('You do not have permission to perform this action.', 'deliver-with-econt'),
+			'type' => 'error'
+		));
+	}
+
+	// Get batch parameters
+	$batch_number = isset($_POST['batch']) ? intval($_POST['batch']) : 0;
+	$batch_size = 50; // Process 50 products per batch
+	$offset = $batch_number * $batch_size;
+
+	// Get accumulated data from previous batches (stored in transient)
+	$transient_key = 'econt_weight_check_' . get_current_user_id();
+	$accumulated_data = get_transient($transient_key);
+
+	// Initialize or retrieve accumulated data
+	if ($batch_number === 0 || !$accumulated_data) {
+		$accumulated_data = array(
+			'total_products' => 0,
+			'virtual_products' => 0,
+			'products_without_weight' => array()
+		);
+	}
+
+	// Get total count of products (only on first batch)
+	if ($batch_number === 0) {
+		$total_count_args = array(
+			'post_type' => 'product',
+			'posts_per_page' => -1,
+			'post_status' => 'publish',
+			'fields' => 'ids'
+		);
+		$all_product_ids = get_posts($total_count_args);
+		$total_product_count = count($all_product_ids);
+
+		// Store total count in transient
+		set_transient($transient_key . '_total', $total_product_count, HOUR_IN_SECONDS);
+	} else {
+		$total_product_count = get_transient($transient_key . '_total');
+	}
+
+	// Get products for this batch
+	$args = array(
+		'post_type' => 'product',
+		'posts_per_page' => $batch_size,
+		'offset' => $offset,
+		'post_status' => 'publish',
+		'fields' => 'ids'
+	);
+
+	$product_ids = get_posts($args);
+
+	// If no products in this batch, we're done
+	if (empty($product_ids)) {
+		// Clean up transients
+		delete_transient($transient_key);
+		delete_transient($transient_key . '_total');
+
+		// Return final results
+		if (empty($accumulated_data['products_without_weight'])) {
+			$message = sprintf(
+				__('All %d physical products have weight configured! (%d virtual/downloadable products were skipped)', 'deliver-with-econt'),
+				$accumulated_data['total_products'],
+				$accumulated_data['virtual_products']
+			);
+			wp_send_json_success(array(
+				'message' => $message,
+				'completed' => true
+			));
+		} else {
+			$count = count($accumulated_data['products_without_weight']);
+			$message = '<strong>' . sprintf(
+				_n(
+					'Warning: %d product does not have weight configured:',
+					'Warning: %d products do not have weight configured:',
+					$count,
+					'deliver-with-econt'
+				),
+				$count
+			) . '</strong><br><br>';
+
+			$message .= '<ul style="margin: 10px 0; padding-left: 20px;">';
+
+			// Show first 20 products
+			$display_count = min(20, $count);
+			for ($i = 0; $i < $display_count; $i++) {
+				$product = $accumulated_data['products_without_weight'][$i];
+				$message .= sprintf(
+					'<li><a href="%s" target="_blank">%s</a> (ID: %d)</li>',
+					esc_url($product['edit_url']),
+					esc_html($product['name']),
+					$product['id']
+				);
+			}
+
+			if ($count > 20) {
+				$message .= '<li><em>' . sprintf(
+					__('... and %d more products', 'deliver-with-econt'),
+					$count - 20
+				) . '</em></li>';
+			}
+
+			$message .= '</ul>';
+			$message .= '<p><em>' . __('Click on product names to edit them and add weight.', 'deliver-with-econt') . '</em></p>';
+
+			wp_send_json_error(array(
+				'message' => $message,
+				'type' => 'warning',
+				'completed' => true
+			));
+		}
+	}
+
+	// Process products in this batch
+	foreach ($product_ids as $product_id) {
+		$product = wc_get_product($product_id);
+
+		if (!$product) {
+			continue;
+		}
+
+		// Skip virtual/downloadable products
+		if ($product->is_virtual() || $product->is_downloadable()) {
+			$accumulated_data['virtual_products']++;
+			continue;
+		}
+
+		// Handle variable products
+		if ($product->is_type('variable')) {
+			$variations = $product->get_available_variations();
+			foreach ($variations as $variation_data) {
+				$variation = wc_get_product($variation_data['variation_id']);
+				if ($variation) {
+					$accumulated_data['total_products']++;
+					$weight = $variation->get_weight();
+					if (empty($weight) || $weight == 0) {
+						$accumulated_data['products_without_weight'][] = array(
+							'id' => $variation->get_id(),
+							'name' => $product->get_name() . ' - ' . implode(', ', $variation->get_variation_attributes()),
+							'edit_url' => get_edit_post_link($product_id)
+						);
+					}
+				}
+			}
+		} else {
+			$accumulated_data['total_products']++;
+			$weight = $product->get_weight();
+
+			if (empty($weight) || $weight == 0) {
+				$accumulated_data['products_without_weight'][] = array(
+					'id' => $product->get_id(),
+					'name' => $product->get_name(),
+					'edit_url' => get_edit_post_link($product_id)
+				);
+			}
+		}
+	}
+
+	// Store accumulated data for next batch
+	set_transient($transient_key, $accumulated_data, HOUR_IN_SECONDS);
+
+	// Calculate progress
+	$processed = $offset + count($product_ids);
+	$progress = ($processed / $total_product_count) * 100;
+
+	// Return progress update
+	wp_send_json_success(array(
+		'completed' => false,
+		'progress' => round($progress, 1),
+		'processed' => $processed,
+		'total' => $total_product_count,
+		'current_batch' => $batch_number + 1,
+		'message' => sprintf(
+			__('Processing products... %d of %d (%s%%)', 'deliver-with-econt'),
+			$processed,
+			$total_product_count,
+			round($progress, 1)
+		)
+	));
+}
+
+add_action('wp_ajax_econt_check_products_weight', 'econt_check_products_weight');
+
+/**
+ * AJAX handler to check if Econt iframe container exists on checkout page
+ */
+function econt_check_iframe_container() {
+	// Verify nonce
+	check_ajax_referer('econt_check_iframe_nonce', 'security');
+
+	// Check user capabilities
+	if (!current_user_can('manage_options')) {
+		wp_send_json_error(array(
+			'message' => __('You do not have permission to perform this action.', 'deliver-with-econt'),
+			'type' => 'error'
+		));
+	}
+
+	$checkout_page_id = wc_get_page_id('checkout');
+
+	if (!$checkout_page_id || $checkout_page_id <= 0) {
+		wp_send_json_error(array(
+			'message' => __('Checkout page not found in WooCommerce settings.', 'deliver-with-econt'),
+			'type' => 'error'
+		));
+	}
+
+	$checkout_url = get_permalink($checkout_page_id);
+
+	// Create a temporary test session to simulate Econt shipping selection
+	// This helps check if the iframe container appears when Econt is selected
+	$session_key = 'wc_session_test_' . md5(uniqid());
+	$customer_id = get_current_user_id();
+
+	// Prepare cookies to simulate WooCommerce session with Econt selected
+	$cookies = array();
+
+	// Set WooCommerce session cookie
+	$session_cookie = 'wp_woocommerce_session_' . COOKIEHASH;
+	$cookies[] = $session_cookie . '=' . $customer_id . '%7C%7C' . time() . '%7C%7C' . md5($customer_id . time());
+
+	// Add cookie to force Econt shipping method selection
+	$cookies[] = 'chosen_shipping_methods=' . urlencode('a:1:{i:0;s:20:"delivery_with_econt";}');
+
+	// Make a request to the checkout page with cookies
+	$response = wp_remote_get($checkout_url, array(
+		'timeout' => 30,
+		'sslverify' => false,
+		'headers' => array(
+			'User-Agent' => 'WordPress/' . get_bloginfo('version') . '; ' . get_bloginfo('url'),
+			'Cookie' => implode('; ', $cookies)
+		)
+	));
+
+	if (is_wp_error($response)) {
+		wp_send_json_error(array(
+			'message' => sprintf(
+				__('Failed to load checkout page: %s', 'deliver-with-econt'),
+				$response->get_error_message()
+			),
+			'type' => 'error'
+		));
+	}
+
+	$body = wp_remote_retrieve_body($response);
+	$status_code = wp_remote_retrieve_response_code($response);
+
+	if ($status_code !== 200) {
+		wp_send_json_error(array(
+			'message' => sprintf(
+				__('Checkout page returned status code %d', 'deliver-with-econt'),
+				$status_code
+			),
+			'type' => 'error'
+		));
+	}
+
+	// Check for the iframe container (with or without id attribute)
+	$has_iframe_container = strpos($body, 'place_iframe_here') !== false;
+
+	// Also check if there's a product in cart indicator
+	$has_cart_items = strpos($body, 'woocommerce-cart-form') !== false
+		|| strpos($body, 'cart-empty') === false;
+
+	// Check for Econt scripts
+	$has_econt_script = strpos($body, 'delivery-with-econt-checkout.js') !== false;
+
+	// Check for Econt styles
+	$has_econt_style = strpos($body, 'delivery-with-econt-checkout.css') !== false;
+
+	// Check for WooCommerce checkout shortcode or block (multiple indicators)
+	$has_wc_checkout = strpos($body, 'woocommerce-checkout') !== false
+		|| strpos($body, 'woocommerce/checkout') !== false
+		|| strpos($body, '[woocommerce_checkout]') !== false
+		|| strpos($body, 'class="checkout') !== false
+		|| strpos($body, 'form.checkout') !== false
+		|| strpos($body, 'form name="checkout"') !== false
+		|| strpos($body, 'id="order_review"') !== false
+		|| strpos($body, 'class="woocommerce-checkout-review-order') !== false
+		|| strpos($body, 'place_order') !== false
+		|| strpos($body, 'woocommerce_checkout_place_order') !== false
+		|| strpos($body, 'checkout_place_order') !== false
+		|| strpos($body, 'billing_first_name') !== false
+		|| strpos($body, 'shipping_method') !== false
+		|| strpos($body, 'payment_method') !== false;
+
+	// Build detailed report
+	$checks = array();
+
+	// Iframe container check
+	if ($has_iframe_container) {
+		$checks[] = array(
+			'label' => __('Econt iframe container (#place_iframe_here)', 'deliver-with-econt'),
+			'status' => 'success',
+			'message' => __('Found on checkout page - Econt integration is working!', 'deliver-with-econt')
+		);
+	} else {
+		// Check if Econt JS is loaded - if yes, then container is added dynamically
+		if ($has_econt_script) {
+			$checks[] = array(
+				'label' => __('Econt iframe container (#place_iframe_here)', 'deliver-with-econt'),
+				'status' => 'warning',
+				'message' => __('Not in initial HTML (Expected) - The container is dynamically created by JavaScript when Econt shipping is selected. Since the Econt JS file is loaded, this should work correctly.', 'deliver-with-econt')
+			);
+		} else {
+			$checks[] = array(
+				'label' => __('Econt iframe container (#place_iframe_here)', 'deliver-with-econt'),
+				'status' => 'warning',
+				'message' => __('Not found and Econt JavaScript not loaded - The plugin may not be functioning correctly.', 'deliver-with-econt')
+			);
+		}
+	}
+
+	// WooCommerce checkout check
+	if ($has_wc_checkout) {
+		$checks[] = array(
+			'label' => __('WooCommerce checkout form', 'deliver-with-econt'),
+			'status' => 'success',
+			'message' => __('Found on page', 'deliver-with-econt')
+		);
+	} else {
+		$checks[] = array(
+			'label' => __('WooCommerce checkout form', 'deliver-with-econt'),
+			'status' => 'warning',
+			'message' => __('Not detected - Is this the correct checkout page?', 'deliver-with-econt')
+		);
+	}
+
+	// Econt JavaScript check
+	if ($has_econt_script) {
+		$checks[] = array(
+			'label' => __('Econt JavaScript file', 'deliver-with-econt'),
+			'status' => 'success',
+			'message' => __('Loaded on checkout page', 'deliver-with-econt')
+		);
+	} else {
+		$checks[] = array(
+			'label' => __('Econt JavaScript file', 'deliver-with-econt'),
+			'status' => 'warning',
+			'message' => __('Not detected - Plugin scripts may not be loading', 'deliver-with-econt')
+		);
+	}
+
+	// Econt CSS check
+	if ($has_econt_style) {
+		$checks[] = array(
+			'label' => __('Econt CSS file', 'deliver-with-econt'),
+			'status' => 'success',
+			'message' => __('Loaded on checkout page', 'deliver-with-econt')
+		);
+	} else {
+		$checks[] = array(
+			'label' => __('Econt CSS file', 'deliver-with-econt'),
+			'status' => 'info',
+			'message' => __('Not detected - Styling may be affected', 'deliver-with-econt')
+		);
+	}
+
+	// Determine overall status
+	$overall_success = $has_iframe_container && $has_wc_checkout;
+
+	$message = $overall_success
+		? __('Checkout page check completed successfully!', 'deliver-with-econt')
+		: __('Issues detected on checkout page', 'deliver-with-econt');
+
+	if ($overall_success) {
+		wp_send_json_success(array(
+			'message' => $message,
+			'checks' => $checks,
+			'checkout_url' => $checkout_url
+		));
+	} else {
+		wp_send_json_error(array(
+			'message' => $message,
+			'type' => 'warning',
+			'checks' => $checks,
+			'checkout_url' => $checkout_url
+		));
+	}
+}
+
+add_action('wp_ajax_econt_check_iframe_container', 'econt_check_iframe_container');
