@@ -55,11 +55,26 @@ class Delivery_With_Econt
 
     public static function save_waybill_id()
     {
-        $data = json_decode( wp_unslash( $_POST['message'] ), true );    
-        if ( $data['shipmentStatus']['shipmentNumber'] === null ){
-            delete_post_meta( $data['orderData']['num'], '_order_waybill_id', sanitize_text_field( $data['shipmentStatus']['shipmentNumber'] ) );
+        $data = json_decode( wp_unslash( $_POST['message'] ), true );
+        $order_id = absint( $data['orderData']['num'] );
+        $order = wc_get_order( $order_id );
+
+        if ( ! $order ) {
+            die('{}');
+        }
+
+        $waybill_number = sanitize_text_field( $data['shipmentStatus']['shipmentNumber'] );
+
+        if ( $waybill_number === null || $waybill_number === '' ) {
+            // Delete meta using both methods for compatibility
+            $order->delete_meta_data( '_order_waybill_id' );
+            $order->save();
+            delete_post_meta( $order_id, '_order_waybill_id' );
         } else {
-            update_post_meta( absint( $data['orderData']['num'] ), '_order_waybill_id', sanitize_text_field( $data['shipmentStatus']['shipmentNumber'] ) );
+            // Update meta using both methods for compatibility
+            $order->update_meta_data( '_order_waybill_id', $waybill_number );
+            $order->save();
+            update_post_meta( $order_id, '_order_waybill_id', $waybill_number );
         }
         die('{}');
     }

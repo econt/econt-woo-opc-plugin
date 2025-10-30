@@ -7,6 +7,28 @@ if (!defined( 'ABSPATH')) {
 class Delivery_With_Econt_Admin
 {
     /**
+     * Get waybill ID for an order with HPOS and CPT compatibility
+     *
+     * @param WC_Order $order The order object
+     * @return string The waybill ID or empty string
+     */
+    private static function get_order_waybill_id( $order ) {
+        if ( ! $order ) {
+            return '';
+        }
+
+        // Try WooCommerce method first (supports both CPT and HPOS)
+        $waybill_id = $order->get_meta('_order_waybill_id', true);
+
+        // Fallback to WordPress post meta for older installations or CPT mode
+        if ( empty( $waybill_id ) ) {
+            $waybill_id = get_post_meta($order->get_id(), '_order_waybill_id', true);
+        }
+
+        return $waybill_id;
+    }
+
+    /**
      * Add column to admin page orders view table
      */
     public static function add_waybill_column( $columns )
@@ -38,8 +60,8 @@ class Delivery_With_Econt_Admin
 		        return; // safety check
 	        }
 
-	        // Use WordPress method instead of WC method since WC cache is out of sync
-	        $waybill_id = get_post_meta($order->get_id(), '_order_waybill_id', true);
+	        // Get waybill ID with HPOS/CPT compatibility
+	        $waybill_id = static::get_order_waybill_id( $order );
 			if( $order->has_shipping_method(Delivery_With_Econt_Options::get_plugin_name()) && static::check_status( $order->get_status() ) ) {
 				if( WC()->version < '3.2.0' ) {
 					?>
@@ -98,8 +120,8 @@ class Delivery_With_Econt_Admin
             <div class="delivery-with-econt-generate-waybill">
                 <?php
                 $order = $prod->get_order();
-                $waybill_id = $prod->get_order()->get_meta('_order_waybill_id');
-                $order_id = $prod->get_order()->get_id();
+                $waybill_id = static::get_order_waybill_id( $order );
+                $order_id = $order->get_id();
                 $currency = $prod->get_order()->get_currency();
                 if (WC()->version < '3.2.0') {
                     ?>
