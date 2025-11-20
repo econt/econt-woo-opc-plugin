@@ -92,11 +92,15 @@ const EcontAlwaysLoadedContent = () => {
         }
     };
 
-    // React effect for Econt shipping price monitoring
+    // React effect for Econt shipping price monitoring - runs on every checkout update
     useEffect(() => {
+        if (!isEcontSelected()) {
+            return;
+        }
 
         const checkShippingPrice = () => {
             const econtPrice = getCookie('econt_shippment_price');
+            console.log('Econt price check:', econtPrice);
 
             // If cookie is missing, empty, or "0"
             if (!econtPrice || econtPrice === '' || econtPrice === '0') {
@@ -107,11 +111,22 @@ const EcontAlwaysLoadedContent = () => {
         // Check immediately
         checkShippingPrice();
 
-        // Run once after a delay (e.g., 500ms)
-        const timeoutId = setTimeout(checkShippingPrice, 500);
+        // Keep checking until order summary is rendered (up to 3 seconds)
+        let attempts = 0;
+        const maxAttempts = 15;
+        const intervalId = setInterval(() => {
+            attempts++;
+            const orderSummaryExists = document.querySelector('.wc-block-components-totals-shipping .wc-block-components-totals-item__value');
 
-        return () => clearTimeout(timeoutId);
-    }, [selectedShippingMethod]);
+            if (orderSummaryExists || attempts >= maxAttempts) {
+                clearInterval(intervalId);
+            }
+
+            checkShippingPrice();
+        }, 200);
+
+        return () => clearInterval(intervalId);
+    }, [selectedShippingMethod, cartData, shippingData]);
 
 
 

@@ -4,6 +4,20 @@ All notable changes to the Econt Delivery OneCheckout plugin will be documented 
 
 ---
 
+## Version 3.0.8 - 20.11.2025
+
+### 🐛 Bug Fixes
+- **Block Checkout:** Fixed order summary sidebar not updating shipping price on initial page load when Econt shipping is already selected
+- Shipping price display now properly updates in order summary sidebar when checkout refreshes/updates
+- Implemented polling mechanism to ensure DOM elements are ready before updating shipping price labels
+
+### 🔧 Technical Changes
+- Modified `useEffect` hook in block checkout to watch `cartData` and `shippingData` changes
+- Added interval-based DOM checking (200ms intervals, up to 3 seconds) to handle asynchronous rendering
+- Improved `updateShippingPriceDisplay()` function to reliably update both shipping options and order summary sections
+
+---
+
 ## Version 3.0.7 - 30.10.2025
 
 ### 🐛 Bug Fixes
