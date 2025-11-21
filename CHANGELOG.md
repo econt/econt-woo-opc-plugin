@@ -4,6 +4,32 @@ All notable changes to the Econt Delivery OneCheckout plugin will be documented 
 
 ---
 
+## Version 3.0.9 - 21.11.2025
+
+### ✨ New Features
+- **Avada Theme Builder Support:** Added full compatibility with Avada (Fusion Builder)
+  - Admin panel now correctly detects Avada as page builder
+  - Checkout form type properly identified as "Page Builder"
+  - Classic jQuery scripts work seamlessly with Avada checkout pages
+
+### 🐛 Bug Fixes
+- **Initial Page Load:** Fixed iframe and field hiding not working on initial page load for page builders
+  - Implemented smart retry mechanism with 3-tier initialization (immediate, 500ms, 1500ms)
+  - Ensures Econt iframe displays correctly when shipping method is pre-selected
+  - Customer details fields now hide properly on first page load
+- **CSS Asset Path:** Fixed incorrect loader.gif path reference from old plugin directory
+
+### 🔧 Technical Improvements
+- Added Avada (Fusion Builder) detection via three methods:
+  - `_fusion` post meta check
+  - `fusion_builder_status` meta verification
+  - Content scanning for `[fusion_` shortcodes
+- Enhanced `is_using_block_checkout()` with explanatory comment for Avada behavior
+- Improved JavaScript initialization timing for page builders (Avada, Elementor, Divi, etc.)
+- Updated CSS loader path: `deliver-with-econt-rm` → `econt-woo-opc-plugin`
+
+---
+
 ## Version 3.0.8 - 20.11.2025
 
 ### 🐛 Bug Fixes

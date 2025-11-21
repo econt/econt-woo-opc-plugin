@@ -381,6 +381,29 @@ jQuery(document).ready(function($){
 
 	// Reset cookies on page load
 	resetCookies();
+
+	// Immediate initialization for page builders (Avada, Elementor, etc.)
+	// Check if shipping methods are already available on page load
+	function tryInitialize() {
+		var shippingMethods = $('input[name^="shipping_method"]');
+		if (shippingMethods.length > 0) {
+			console.log('Econt: Shipping methods found, initializing...');
+			initializeShippingMethodToggle();
+			return true;
+		}
+		return false;
+	}
+
+	// Try immediate initialization
+	if (!tryInitialize()) {
+		// If not ready, try again after a short delay
+		setTimeout(function() {
+			if (!tryInitialize()) {
+				// Try one more time after page is fully loaded
+				setTimeout(tryInitialize, 1000);
+			}
+		}, 500);
+	}
 });
 
 /**

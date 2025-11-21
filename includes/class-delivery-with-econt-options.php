@@ -937,6 +937,12 @@ class Delivery_With_Econt_Options
 			if (get_post_meta($checkout_page_id, '_elementor_edit_mode', true)) {
 				$info['builder'] = 'Elementor';
 			}
+			// Check for Avada (Fusion Builder)
+			elseif (get_post_meta($checkout_page_id, '_fusion', true) ||
+			        get_post_meta($checkout_page_id, 'fusion_builder_status', true) === 'active' ||
+			        strpos($post_content, '[fusion_') !== false) {
+				$info['builder'] = 'Avada';
+			}
 			// Check for Divi
 			elseif (get_post_meta($checkout_page_id, '_et_pb_use_builder', true) === 'on') {
 				$info['builder'] = 'Divi';
@@ -959,7 +965,7 @@ class Delivery_With_Econt_Options
 				$info['form_type'] = __('Gutenberg Block', 'deliver-with-econt');
 			} elseif (strpos($post_content, '[woocommerce_checkout]') !== false) {
 				$info['form_type'] = __('Classic Shortcode', 'deliver-with-econt');
-			} elseif (in_array($info['builder'], array('Elementor', 'Divi', 'WPBakery'))) {
+			} elseif (in_array($info['builder'], array('Elementor', 'Divi', 'WPBakery', 'Avada'))) {
 				$info['form_type'] = __('Page Builder', 'deliver-with-econt');
 			} else {
 				$info['form_type'] = __('Unknown', 'deliver-with-econt');

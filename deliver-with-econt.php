@@ -12,7 +12,7 @@
  * Plugin Name:       Econt Delivery OneCheckout
  * Plugin URI:        https://econt.com/developers/
  * Description:       Econt Shipping Module
- * Version:           3.0.8
+ * Version:           3.0.9
  * Author:            Econt Express LTD.
  * Author URI:        https://econt.com/developers/
  * License:           GPL-2.0+
@@ -92,6 +92,9 @@ function is_using_block_checkout() {
 	// Check for 10Web Builder
 	$is_10web = get_post_meta( $current_page_id, '_ai_builder_enabled', true ) ||
 	            get_post_meta( $current_page_id, '_10web_builder', true );
+
+	// Note: Avada (Fusion Builder) typically uses classic WooCommerce shortcode [woocommerce_checkout]
+	// so it doesn't need the React block scripts - the classic jQuery scripts will work fine
 
 	return $has_checkout_block || $contains_block_pattern || $is_elementor || $is_10web;
 }
