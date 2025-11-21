@@ -365,15 +365,42 @@ jQuery(document).ready(function($){
 		}
 	}, false);
 
+	// Track if initialization has been completed
+	var isInitialized = false;
+
 	// Initialize the shipping method toggle functionality
-	// Wait for WooCommerce to signal it's ready
+	function safeInitialize() {
+		var shippingMethods = $('input[name^="shipping_method"]');
+
+		// Only initialize if we have shipping methods and haven't initialized yet
+		if (shippingMethods.length > 0 && !isInitialized) {
+			console.log('Econt: Initializing checkout integration...');
+			isInitialized = true;
+			initializeShippingMethodToggle();
+
+			// Disconnect observer if it exists
+			if (window.econtShippingObserver) {
+				window.econtShippingObserver.disconnect();
+				window.econtShippingObserver = null;
+			}
+		}
+	}
+
+	// Listen for WooCommerce init_checkout event (standard WooCommerce)
 	$(document.body).on('init_checkout', function() {
-		console.log('init checkout')
-		initializeShippingMethodToggle();
+		console.log('Econt: WooCommerce init_checkout event fired');
+		safeInitialize();
 	});
 
-	// Use event delegation instead - fallback of bindShippingMethodChangeEvents()
+	// Listen for updated_checkout event (fires after AJAX updates)
+	$(document.body).on('updated_checkout', function() {
+		console.log('Econt: WooCommerce updated_checkout event fired');
+		safeInitialize();
+	});
+
+	// Use event delegation for shipping method changes
 	$(document).on('change.econtToggle', 'input[name^="shipping_method"]', function() {
+		console.log('Econt: Shipping method changed');
 		resetCookies();
 		toggleFieldsBasedOnShippingMethod();
 		$('body').trigger('update_checkout');
@@ -382,28 +409,68 @@ jQuery(document).ready(function($){
 	// Reset cookies on page load
 	resetCookies();
 
-	// Immediate initialization for page builders (Avada, Elementor, etc.)
-	// Check if shipping methods are already available on page load
-	function tryInitialize() {
-		var shippingMethods = $('input[name^="shipping_method"]');
-		if (shippingMethods.length > 0) {
-			console.log('Econt: Shipping methods found, initializing...');
-			initializeShippingMethodToggle();
-			return true;
+	// Strategy 1: Try immediate initialization (for fast-loading pages)
+	safeInitialize();
+
+	// Strategy 2: Use MutationObserver to watch for shipping methods being added to DOM
+	// This is the most reliable approach for page builders (Avada, Elementor, Divi, etc.)
+	if (!isInitialized && typeof MutationObserver !== 'undefined') {
+		console.log('Econt: Setting up MutationObserver for shipping methods...');
+
+		var checkoutForm = document.querySelector('form.woocommerce-checkout, form[name="checkout"]');
+
+		if (checkoutForm) {
+			window.econtShippingObserver = new MutationObserver(function(mutations) {
+				// Check if shipping methods have been added
+				if (!isInitialized) {
+					safeInitialize();
+				}
+			});
+
+			// Start observing the checkout form for changes
+			window.econtShippingObserver.observe(checkoutForm, {
+				childList: true,
+				subtree: true,
+				attributes: true,
+				attributeFilter: ['value', 'checked']
+			});
+
+			// Fallback: Stop observing after 10 seconds to prevent memory leaks
+			setTimeout(function() {
+				if (window.econtShippingObserver) {
+					window.econtShippingObserver.disconnect();
+					window.econtShippingObserver = null;
+					console.log('Econt: MutationObserver timeout reached');
+				}
+			}, 10000);
 		}
-		return false;
 	}
 
-	// Try immediate initialization
-	if (!tryInitialize()) {
-		// If not ready, try again after a short delay
-		setTimeout(function() {
-			if (!tryInitialize()) {
-				// Try one more time after page is fully loaded
-				setTimeout(tryInitialize, 1000);
+	// Strategy 3: Fallback polling for environments where MutationObserver might not work
+	// Try a few times with increasing intervals
+	var pollAttempts = 0;
+	var maxPollAttempts = 5;
+	var pollInterval;
+
+	function pollForShippingMethods() {
+		if (!isInitialized && pollAttempts < maxPollAttempts) {
+			pollAttempts++;
+			console.log('Econt: Polling attempt ' + pollAttempts + '/' + maxPollAttempts);
+			safeInitialize();
+		} else {
+			clearInterval(pollInterval);
+			if (!isInitialized) {
+				console.warn('Econt: Could not find shipping methods after ' + maxPollAttempts + ' attempts');
 			}
-		}, 500);
+		}
 	}
+
+	// Start polling after a short delay (in case MutationObserver works first)
+	setTimeout(function() {
+		if (!isInitialized) {
+			pollInterval = setInterval(pollForShippingMethods, 800);
+		}
+	}, 300);
 });
 
 /**
