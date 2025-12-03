@@ -68,7 +68,8 @@ class Econt_Blocks {
 		    'Please complete Econt delivery details first' => __('Please complete Econt delivery details first', 'deliver-with-econt'),
 		    'Delivery to office:' => __('Delivery to office:', 'deliver-with-econt'),
 		    'Delivery to address:' => __('Delivery to address:', 'deliver-with-econt'),
-		    'Calculating...' => __('Calculating...', 'deliver-with-econt')
+		    'Calculating...' => __('Calculating...', 'deliver-with-econt'),
+		    'Free' => __('Free', 'woocommerce')
 	    );
 
 	    // Add these translations to the localized data

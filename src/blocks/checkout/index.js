@@ -102,8 +102,28 @@ const EcontAlwaysLoadedContent = () => {
             const econtPrice = getCookie('econt_shippment_price');
             console.log('Econt price check:', econtPrice);
 
-            // If cookie is missing, empty, or "0"
-            if (!econtPrice || econtPrice === '' || econtPrice === '0') {
+            // If cookie is "0", restore original "Free" text
+            if (econtPrice === '0') {
+                // Restore original free shipping HTML in shipping options section
+                const econtShippingOption = document.querySelector('input[value="delivery_with_econt"]');
+                if (econtShippingOption) {
+                    const secondaryLabel = econtShippingOption.closest('label')?.querySelector('.wc-block-components-radio-control__secondary-label');
+                    if (secondaryLabel) {
+                        let priceSpan = secondaryLabel.querySelector('.wc-block-checkout__shipping-option--free');
+                        if (priceSpan) {
+                            priceSpan.textContent = getTranslation('Free');
+                        }
+                    }
+                }
+
+                // Update order summary sidebar to show Free
+                const shippingTotalsElement = document.querySelector('.wc-block-components-totals-shipping .wc-block-components-totals-item__value');
+                if (shippingTotalsElement && isEcontSelected()) {
+                    shippingTotalsElement.innerHTML = `<strong>${getTranslation('Free')}</strong>`;
+                }
+            }
+            // If cookie is missing or empty, show "Calculating..."
+            else if (!econtPrice || econtPrice === '') {
                 updateShippingPriceDisplay(getTranslation('Calculating...'));
             }
         };

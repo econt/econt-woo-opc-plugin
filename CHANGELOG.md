@@ -4,6 +4,22 @@ All notable changes to the Econt Delivery OneCheckout plugin will be documented 
 
 ---
 
+## Version 3.1.0 - 03.12.2025
+
+### 🐛 Bug Fixes
+- **Free Shipping Display:** Fixed issue where "Calculating..." was shown instead of "Free" when Econt returns 0 shipping price
+  - When iframe returns 0 as shipping price, now correctly displays "Free" (Безплатно) instead of "Calculating..."
+  - Improved shipping price detection logic to distinguish between:
+    - Not yet calculated (shows "Calculating...")
+    - Calculated as free/0 (shows "Free")
+  - Applied to both shipping options section and order summary sidebar
+
+### 🔧 Technical Improvements
+- Enhanced `checkShippingPrice()` function with better conditional logic
+- Updated shipping price display to properly handle free delivery from Econt platform
+
+---
+
 ## Version 3.0.9 - 21.11.2025
 
 ### ✨ New Features
