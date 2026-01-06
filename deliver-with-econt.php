@@ -12,7 +12,7 @@
  * Plugin Name:       Econt Delivery OneCheckout
  * Plugin URI:        https://econt.com/developers/
  * Description:       Econt Shipping Module
- * Version:           3.1.0
+ * Version:           3.1.1
  * Author:            Econt Express LTD.
  * Author URI:        https://econt.com/developers/
  * License:           GPL-2.0+
@@ -20,7 +20,9 @@
  * Text Domain:       deliver-with-econt
  * Domain Path:       /languages
  * Requires at least: 4.7
- * Tested up to:      6.6
+ * Tested up to:      6.7
+ * WC requires at least: 3.0
+ * WC tested up to:  10.4
  */
 
 // If this file is called directly, abort.

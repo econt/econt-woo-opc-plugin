@@ -4,6 +4,28 @@ All notable changes to the Econt Delivery OneCheckout plugin will be documented 
 
 ---
 
+## Version 3.1.1 - 06.01.2026
+
+### 🐛 Bug Fixes
+- **Payment Gateway Registration:** Fixed EcontPay payment gateway not appearing in WooCommerce settings on some sites
+  - Removed conditional registration logic that prevented gateway from showing on REST API calls
+  - Payment gateway now always registers and uses `is_available()` method for visibility control
+  - Fixed compatibility with WooCommerce 10.4 REST API endpoints
+  - Resolved issue with Elementor and other page builders where payment method disappeared
+
+### 🔧 Technical Improvements
+- Simplified payment gateway registration to follow WooCommerce best practices
+- Fixed "Undefined array key 'type'" PHP warnings in payment processing
+- Added proper `isset()` checks before accessing API response arrays
+- Improved error handling in payment gateway with fallback error messages
+
+### 📝 Documentation
+- Updated plugin compatibility tags:
+  - WordPress: Tested up to 6.7
+  - WooCommerce: Requires 3.0+, tested up to 10.4
+
+---
+
 ## Version 3.1.0 - 03.12.2025
 
 ### 🐛 Bug Fixes
