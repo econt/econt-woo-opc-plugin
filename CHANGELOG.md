@@ -4,6 +4,25 @@ All notable changes to the Econt Delivery OneCheckout plugin will be documented 
 
 ---
 
+## Version 3.1.3 - 07.01.2026
+
+### 🐛 Bug Fixes
+- **PHP 8.3 Compatibility:** Fixed settings page loading failure on PHP 8.3 environments (IIS/Windows Server)
+  - Added proper `isset()` checks before accessing `$this->options['demo_service']` array key
+  - Fixed undefined array key warning in `demo_checkbox_callback()` that caused 500 errors on strict FastCGI configurations
+  - Added `isset()` checks in `sanitize()` method for `private_key` comparison
+  - Prevents "Undefined array key" warnings on fresh installations where options haven't been saved yet
+
+### 🔧 Technical Improvements
+- Enhanced settings initialization with defensive array key checking
+- Improved error handling for uninitialized plugin options
+- Settings page now gracefully handles missing configuration data
+
+### 📊 Affected Files
+- `includes/class-delivery-with-econt-options.php` - Added array key existence checks
+
+---
+
 ## Version 3.1.2 - 07.01.2026
 
 ### 🚀 Major Update: WooCommerce HPOS Compatibility

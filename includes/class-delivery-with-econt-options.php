@@ -190,7 +190,7 @@ class Delivery_With_Econt_Options
 		    $new_input['custom_hidden_selectors'] = sanitize_textarea_field($input['custom_hidden_selectors']);
 	    }
 
-        if ($input['private_key'] != $this->options['private_key']) {
+        if (isset($input['private_key']) && isset($this->options['private_key']) && $input['private_key'] != $this->options['private_key']) {
             Delivery_With_Econt_Helper::sendLog('activate', 'activated', (intval($new_input['demo_service']) <= 0 ? self::REAL_URL : self::DEMO_URL), $new_input['private_key']);
         }
 
@@ -232,7 +232,7 @@ class Delivery_With_Econt_Options
         printf(
             '<!-- Here we are comparing stored value with 1. Stored value is 1 if user checks the checkbox otherwise empty string. -->
             <input type="checkbox" name="delivery_with_econt_settings[demo_service]" value="1" %s />',
-            checked(1, $this->options['demo_service'], false)
+            checked(1, isset($this->options['demo_service']) ? $this->options['demo_service'] : 0, false)
         );
     }
 
