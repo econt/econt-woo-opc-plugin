@@ -4,6 +4,51 @@ All notable changes to the Econt Delivery OneCheckout plugin will be documented 
 
 ---
 
+## Version 3.1.2 - 07.01.2026
+
+### 🚀 Major Update: WooCommerce HPOS Compatibility
+
+This release adds full compatibility with WooCommerce High-Performance Order Storage (HPOS) and WooCommerce 10.4+.
+
+#### ✨ New Features
+- **HPOS Declaration:** Official WooCommerce HPOS compatibility declaration for WooCommerce 7.1+
+- **Dual System Support:** Seamlessly works with both traditional CPT-based orders and modern HPOS orders
+
+#### 🔧 Technical Improvements
+- **Removed Deprecated Functions:**
+  - Replaced deprecated `wc_save_order_items()` with modern WooCommerce CRUD methods
+  - Updated to use `WC_Order_Item_Shipping` objects for shipping cost updates
+  - Compatible with WooCommerce 3.0+ through 10.4+
+
+- **Order Meta Handling:**
+  - Removed dual-write pattern (CPT + HPOS) that caused data inconsistency
+  - Now uses WooCommerce order object methods exclusively (`$order->update_meta_data()`, `$order->get_meta()`, `$order->delete_meta_data()`)
+  - Ensures data integrity in HPOS-only environments
+
+- **Hook Updates:**
+  - Updated order sync hooks for HPOS compatibility
+  - Added intelligent context detection (admin vs frontend)
+  - Implemented recursion prevention for order update hooks
+  - Optimized performance - admin-only sync operations don't impact frontend checkout speed
+
+#### 🐛 Bug Fixes
+- Fixed infinite loop issue that caused memory exhaustion on some installations
+- Fixed order sync only running when appropriate (admin context)
+- Prevented unnecessary sync operations during checkout flow
+
+#### 📊 Affected Files
+- `deliver-with-econt.php` - Added HPOS compatibility declaration
+- `bootstrap.php` - Updated hooks and order sync logic
+- `includes/class-delivery-with-econt.php` - Replaced deprecated functions, removed dual-write
+- `helpers.php` - Removed direct post meta calls for order data
+
+#### ⚙️ Backward Compatibility
+- Fully backward compatible with WooCommerce 3.0+
+- Works with both HPOS-enabled and CPT-based WooCommerce installations
+- No breaking changes for existing sites
+
+---
+
 ## Version 3.1.1 - 06.01.2026
 
 ### 🐛 Bug Fixes

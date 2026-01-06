@@ -12,7 +12,7 @@
  * Plugin Name:       Econt Delivery OneCheckout
  * Plugin URI:        https://econt.com/developers/
  * Description:       Econt Shipping Module
- * Version:           3.1.1
+ * Version:           3.1.2
  * Author:            Econt Express LTD.
  * Author URI:        https://econt.com/developers/
  * License:           GPL-2.0+
@@ -63,6 +63,20 @@ register_activation_hook( __FILE__, 'activate_delivery_with_econt' );
 define( 'ECONT_PLUGIN_FILE', __FILE__ );
 define( 'ECONT_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'ECONT_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
+
+/**
+ * Declare compatibility with WooCommerce features
+ *
+ * This declares that the plugin is compatible with WooCommerce HPOS (High-Performance Order Storage)
+ * WooCommerce 7.1+ requires plugins to explicitly declare HPOS compatibility
+ *
+ * @since 3.2.0
+ */
+add_action( 'before_woocommerce_init', function() {
+	if ( class_exists( \Automattic\WooCommerce\Utilities\FeaturesUtil::class ) ) {
+		\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__, true );
+	}
+} );
 
 function is_using_block_checkout() {
 	// Only try to get the current ID if we're on a page

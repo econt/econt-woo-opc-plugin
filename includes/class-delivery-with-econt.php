@@ -37,14 +37,17 @@ class Delivery_With_Econt
         } else {
             $new_shipping_price = number_format( $sync, 2, '.', '' );
 
+            // Update shipping costs using WooCommerce CRUD (compatible with WC 3.0+, HPOS)
             $shipping_keys = array_keys( $items['shipping_cost'] );
-            foreach( $shipping_keys as $key ) {
-                $items['shipping_cost'][$key] = $new_shipping_price;
+            foreach( $shipping_keys as $shipping_item_id ) {
+                $shipping_item = new WC_Order_Item_Shipping( intval( $shipping_item_id ) );
+                if ( $shipping_item ) {
+                    $shipping_item->set_total( floatval( $new_shipping_price ) );
+                    $shipping_item->save();
+                }
             }
-            // Save order items first.
-            wc_save_order_items( $order_id, $items );
 
-            // recalculate taxes.    
+            // recalculate taxes.
             $order->calculate_taxes( $calculate_tax_args );
             $order->calculate_totals( true );
         }
@@ -66,15 +69,13 @@ class Delivery_With_Econt
         $waybill_number = sanitize_text_field( $data['shipmentStatus']['shipmentNumber'] );
 
         if ( $waybill_number === null || $waybill_number === '' ) {
-            // Delete meta using both methods for compatibility
+            // Delete meta using WooCommerce CRUD (works for both CPT and HPOS)
             $order->delete_meta_data( '_order_waybill_id' );
             $order->save();
-            delete_post_meta( $order_id, '_order_waybill_id' );
         } else {
-            // Update meta using both methods for compatibility
+            // Update meta using WooCommerce CRUD (works for both CPT and HPOS)
             $order->update_meta_data( '_order_waybill_id', $waybill_number );
             $order->save();
-            update_post_meta( $order_id, '_order_waybill_id', $waybill_number );
         }
         die('{}');
     }

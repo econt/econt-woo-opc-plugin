@@ -82,7 +82,9 @@ class Delivery_With_Econt_Helper
 		$id = '';
 		if ( isset($_COOKIE['econt_customer_info_id']) ) {
 			$id = sanitize_text_field($_COOKIE['econt_customer_info_id']);
-			update_post_meta( $order_id, '_customer_info_id', $id );
+			// Use WooCommerce CRUD (works for both CPT and HPOS)
+			$order->update_meta_data( '_customer_info_id', $id );
+			$order->save();
 			setcookie("econt_customer_info_id", '', time() - 3600);
 			setcookie("econt_shippment_price", '', time() - 3600);
 		} else {
@@ -190,7 +192,9 @@ class Delivery_With_Econt_Helper
 				'text' => $parsed_response['message'] ?? 'Unknown error',
 				'type' => 'error'
 			];
-			update_post_meta( $order_id, '_sync_error', sanitize_text_field( $message['text'] ) );
+			// Use WooCommerce CRUD (works for both CPT and HPOS)
+			$order->update_meta_data( '_sync_error', sanitize_text_field( $message['text'] ) );
+			$order->save();
 			error_log("[Econt Sync] API Error: " . $message['text']);
 		}
 

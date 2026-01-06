@@ -573,21 +573,52 @@ function delivery_with_econt_sync_order($order_id) {
 
 ;
 
+// Hook for CPT-based orders (legacy) - only fires when saving order in admin
 add_action('woocommerce_process_shop_order_meta', 'delivery_with_econt_sync_order', 999);
+
+// Hook for HPOS-based orders - use the admin-specific hook instead of the generic update hook
+// This hook only fires when editing orders in wp-admin, not on every $order->save()
+add_action('woocommerce_update_order', 'delivery_with_econt_sync_order_hpos', 999);
+
+function delivery_with_econt_sync_order_hpos($order_id) {
+	// Only sync when in admin context and not during our own sync operation
+	// This prevents infinite loops and unnecessary syncs
+	if (!is_admin()) {
+		return;
+	}
+
+	// Check if this is being called from our own sync to prevent recursion
+	if (doing_action('woocommerce_checkout_order_processed') ||
+	    doing_action('woocommerce_store_api_checkout_order_processed')) {
+		return; // Already handled by checkout hooks
+	}
+
+	// Use a flag to prevent re-entry during the same request
+	static $syncing = false;
+	if ($syncing) {
+		return;
+	}
+
+	$syncing = true;
+	DWEH()->sync_order($order_id);
+	$syncing = false;
+}
 
 function econt_sync_error() {
 	$post_id = get_the_ID();
 	$order = wc_get_order($post_id);
 	if (!$order) return;
 	$error = $order->get_meta('_sync_error');
-	
+
 	if ($error != '') {
 		?>
         <div class="notice notice-error is-dismissible">
             <p><?php echo $error; ?></p>
         </div>
 		<?php
-		delete_post_meta($post_id, '_sync_error');
+		// Use WooCommerce CRUD (works for both CPT and HPOS)
+		$order->delete_meta_data('_sync_error');
+		$order->save();
 	}
 }
 
