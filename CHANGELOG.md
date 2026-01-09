@@ -4,6 +4,25 @@ All notable changes to the Econt Delivery OneCheckout plugin will be documented 
 
 ---
 
+## Version 3.1.4 - 09.01.2026
+
+### 🐛 Bug Fixes
+- **Checkout Cart Update:** Fixed validation alert appearing when clicking "Update Cart" button on checkout pages with cart forms
+  - Changed form validation from global scope to target only checkout forms specifically
+  - Now uses targeted selectors: `form[name="checkout"]` and `form.woocommerce-checkout`
+  - Cart update forms (`.woocommerce-cart-form`) no longer trigger Econt shipping validation
+  - Added fallback handling for undefined checkout form selectors
+
+### 🔧 Technical Improvements
+- Refactored form submission validation to use existing `getCustomSelectors()` configuration system
+- Improved performance by reducing unnecessary event listeners on non-checkout forms
+- Better compatibility with various WooCommerce checkout layouts and page builders
+
+### 📊 Affected Files
+- `public/js/delivery-with-econt-checkout.js` - Refactored validation form selectors (lines 177-194)
+
+---
+
 ## Version 3.1.3 - 07.01.2026
 
 ### 🐛 Bug Fixes

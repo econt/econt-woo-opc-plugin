@@ -174,8 +174,13 @@ jQuery(document).ready(function($){
 		}
 	}
 
-	// Prevent form submission with Enter key
-	$("form[name='checkout']").on('keypress', function(e) {
+	// Get checkout form selectors for validation
+	var customSelectors = getCustomSelectors();
+	var checkoutFormsArray = customSelectors.checkoutForm || ['form[name="checkout"]', 'form.woocommerce-checkout'];
+	var checkoutForms = checkoutFormsArray.join(', ');
+
+	// Prevent form submission with Enter key on checkout forms
+	$(checkoutForms).on('keypress', function(e) {
 		var key = e.which || e.keyCode;
 		if (key === 13) { // 13 is enter
 			e.preventDefault();
@@ -183,8 +188,9 @@ jQuery(document).ready(function($){
 		}
 	});
 
-	// Form submission validation - exclude coupon forms
-	$("form").not("form.woocommerce-form-coupon").submit(function(e) {
+	// Form submission validation - target only checkout forms
+
+	$(checkoutForms).submit(function(e) {
 		validateShippingPrice(e);
 	});
 
