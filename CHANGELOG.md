@@ -4,6 +4,40 @@ All notable changes to the Econt Delivery OneCheckout plugin will be documented 
 
 ---
 
+## Version 3.1.5 - 12.01.2026
+
+### ✨ New Features - Multistep Checkout Support
+- **Enhanced Multistep Checkout Compatibility:** Plugin now fully supports checkout pages where shipping method selection happens on a previous step
+  - Automatic detection of billing forms using custom CSS selectors from plugin settings
+  - Econt iframe now loads correctly when shipping method is selected on a previous step/page
+  - Added AJAX mechanism to query WooCommerce session for selected shipping method
+  - Support for checkout pages where shipping method inputs are not visible in the DOM
+
+### 🔧 Technical Improvements
+- **Strategy 4 Initialization:** Added new initialization strategy for multistep checkouts
+  - Implements MutationObserver to watch for billing form appearance
+  - Reads custom `customer_details_selector` from plugin settings (e.g., `.woocommerce-billing-fields`)
+  - Checks immediately on page load if billing form already exists
+  - Falls back to AJAX shipping method detection when DOM inputs are unavailable
+- **Force Econt Mode:** Enhanced `toggleFieldsBasedOnShippingMethod()` with `forceEcont` parameter
+  - Allows bypassing client-side shipping method detection
+  - Ensures iframe injection works when shipping selection is server-side only
+- **AJAX Endpoint:** Added `get_chosen_shipping_method` AJAX action
+  - Queries `WC()->session->get('chosen_shipping_methods')`
+  - Returns selected shipping method from server-side session storage
+  - Works for both logged-in and guest users
+
+### 📊 Affected Files
+- `public/js/delivery-with-econt-checkout.js` - Added Strategy 4 initialization, AJAX check function, force parameter
+- `bootstrap.php` - Added AJAX handler for retrieving chosen shipping method from WooCommerce session
+
+### 🔄 Compatibility
+- Works with all multistep checkout plugins where shipping method is stored in WooCommerce session
+- Compatible with custom checkout layouts using non-standard CSS selectors
+- Maintains backward compatibility with standard single-page checkouts
+
+---
+
 ## Version 3.1.4 - 09.01.2026
 
 ### 🐛 Bug Fixes

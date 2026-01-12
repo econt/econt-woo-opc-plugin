@@ -153,6 +153,24 @@ function delivery_with_econt_get_order_info() {
 add_action('wp_ajax_woocommerce_delivery_with_econt_get_orderinfo', 'delivery_with_econt_get_order_info', 10);
 add_action('wp_ajax_nopriv_woocommerce_delivery_with_econt_get_orderinfo', 'delivery_with_econt_get_order_info', 10);
 
+/**
+ * AJAX handler to get chosen shipping method (for multistep checkouts)
+ */
+function delivery_with_econt_get_chosen_shipping_method() {
+	// Get chosen shipping methods from WooCommerce session
+	$chosen_methods = WC()->session->get('chosen_shipping_methods');
+
+	if (!empty($chosen_methods) && is_array($chosen_methods)) {
+		// Return the first chosen shipping method
+		wp_send_json_success($chosen_methods[0]);
+	} else {
+		wp_send_json_error('No shipping method selected');
+	}
+}
+
+add_action('wp_ajax_get_chosen_shipping_method', 'delivery_with_econt_get_chosen_shipping_method');
+add_action('wp_ajax_nopriv_get_chosen_shipping_method', 'delivery_with_econt_get_chosen_shipping_method');
+
 // end
 
 /**
