@@ -116,9 +116,9 @@ class Delivery_With_Econt_Payment extends WC_Payment_Gateway {
         $response = DWEH()->curl_request($data, DWEH()->get_service_url() . 'services/PaymentsService.createPayment.json');
         $response = json_decode($response, true);
 
-        if($response['type'] != '') {
+        if(isset($response['type']) && $response['type'] != '') {
             $message = [];
-            $message['text'] = $response['message'];
+            $message['text'] = isset($response['message']) ? $response['message'] : __('Payment processing error', 'delivery-with-econt');
             $message['type'] = "error";
 
             // if we receive error message from econt, we save it in the database for display it later
@@ -153,9 +153,9 @@ class Delivery_With_Econt_Payment extends WC_Payment_Gateway {
         $response = DWEH()->curl_request($data, DWEH()->get_service_url() . 'services/PaymentsService.confirmPayment.json');
         $response = json_decode($response, true);
 
-        if($response['type'] != '') {
+        if(isset($response['type']) && $response['type'] != '') {
             $message = [];
-            $message['text'] = $response['message'];
+            $message['text'] = isset($response['message']) ? $response['message'] : __('Payment confirmation error', 'delivery-with-econt');
             $message['type'] = "error";
 
             // if we receive error message from econt, we save it in the database for display it later

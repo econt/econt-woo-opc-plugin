@@ -102,13 +102,9 @@ add_action('woocommerce_shipping_init', 'econt_shipping_method_init');
  * @return array
  */
 function add_econt_payment_gateway($gateways) {
-	if ((
-			defined('WP_ADMIN') && WP_ADMIN)
-		|| (!WC()->session || @WC()->session->get('chosen_shipping_methods')[0] == 'delivery_with_econt') && get_woocommerce_currency() === "BGN"
-	) {
-		$gateways['econt_payment'] = Delivery_With_Econt_Payment::class;
-	}
-
+	// Always register the payment gateway
+	// Visibility control is handled in the is_available() method of the payment class
+	$gateways['econt_payment'] = Delivery_With_Econt_Payment::class;
 	return $gateways;
 }
 
@@ -156,6 +152,24 @@ function delivery_with_econt_get_order_info() {
 
 add_action('wp_ajax_woocommerce_delivery_with_econt_get_orderinfo', 'delivery_with_econt_get_order_info', 10);
 add_action('wp_ajax_nopriv_woocommerce_delivery_with_econt_get_orderinfo', 'delivery_with_econt_get_order_info', 10);
+
+/**
+ * AJAX handler to get chosen shipping method (for multistep checkouts)
+ */
+function delivery_with_econt_get_chosen_shipping_method() {
+	// Get chosen shipping methods from WooCommerce session
+	$chosen_methods = WC()->session->get('chosen_shipping_methods');
+
+	if (!empty($chosen_methods) && is_array($chosen_methods)) {
+		// Return the first chosen shipping method
+		wp_send_json_success($chosen_methods[0]);
+	} else {
+		wp_send_json_error('No shipping method selected');
+	}
+}
+
+add_action('wp_ajax_get_chosen_shipping_method', 'delivery_with_econt_get_chosen_shipping_method');
+add_action('wp_ajax_nopriv_get_chosen_shipping_method', 'delivery_with_econt_get_chosen_shipping_method');
 
 // end
 
@@ -577,21 +591,52 @@ function delivery_with_econt_sync_order($order_id) {
 
 ;
 
+// Hook for CPT-based orders (legacy) - only fires when saving order in admin
 add_action('woocommerce_process_shop_order_meta', 'delivery_with_econt_sync_order', 999);
+
+// Hook for HPOS-based orders - use the admin-specific hook instead of the generic update hook
+// This hook only fires when editing orders in wp-admin, not on every $order->save()
+add_action('woocommerce_update_order', 'delivery_with_econt_sync_order_hpos', 999);
+
+function delivery_with_econt_sync_order_hpos($order_id) {
+	// Only sync when in admin context and not during our own sync operation
+	// This prevents infinite loops and unnecessary syncs
+	if (!is_admin()) {
+		return;
+	}
+
+	// Check if this is being called from our own sync to prevent recursion
+	if (doing_action('woocommerce_checkout_order_processed') ||
+	    doing_action('woocommerce_store_api_checkout_order_processed')) {
+		return; // Already handled by checkout hooks
+	}
+
+	// Use a flag to prevent re-entry during the same request
+	static $syncing = false;
+	if ($syncing) {
+		return;
+	}
+
+	$syncing = true;
+	DWEH()->sync_order($order_id);
+	$syncing = false;
+}
 
 function econt_sync_error() {
 	$post_id = get_the_ID();
 	$order = wc_get_order($post_id);
 	if (!$order) return;
 	$error = $order->get_meta('_sync_error');
-	
+
 	if ($error != '') {
 		?>
         <div class="notice notice-error is-dismissible">
             <p><?php echo $error; ?></p>
         </div>
 		<?php
-		delete_post_meta($post_id, '_sync_error');
+		// Use WooCommerce CRUD (works for both CPT and HPOS)
+		$order->delete_meta_data('_sync_error');
+		$order->save();
 	}
 }
 

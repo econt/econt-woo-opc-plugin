@@ -4,6 +4,145 @@ All notable changes to the Econt Delivery OneCheckout plugin will be documented 
 
 ---
 
+## Version 3.1.5 - 12.01.2026
+
+### ✨ New Features - Multistep Checkout Support
+- **Enhanced Multistep Checkout Compatibility:** Plugin now fully supports checkout pages where shipping method selection happens on a previous step
+  - Automatic detection of billing forms using custom CSS selectors from plugin settings
+  - Econt iframe now loads correctly when shipping method is selected on a previous step/page
+  - Added AJAX mechanism to query WooCommerce session for selected shipping method
+  - Support for checkout pages where shipping method inputs are not visible in the DOM
+
+### 🔧 Technical Improvements
+- **Strategy 4 Initialization:** Added new initialization strategy for multistep checkouts
+  - Implements MutationObserver to watch for billing form appearance
+  - Reads custom `customer_details_selector` from plugin settings (e.g., `.woocommerce-billing-fields`)
+  - Checks immediately on page load if billing form already exists
+  - Falls back to AJAX shipping method detection when DOM inputs are unavailable
+- **Force Econt Mode:** Enhanced `toggleFieldsBasedOnShippingMethod()` with `forceEcont` parameter
+  - Allows bypassing client-side shipping method detection
+  - Ensures iframe injection works when shipping selection is server-side only
+- **AJAX Endpoint:** Added `get_chosen_shipping_method` AJAX action
+  - Queries `WC()->session->get('chosen_shipping_methods')`
+  - Returns selected shipping method from server-side session storage
+  - Works for both logged-in and guest users
+
+### 📊 Affected Files
+- `public/js/delivery-with-econt-checkout.js` - Added Strategy 4 initialization, AJAX check function, force parameter
+- `bootstrap.php` - Added AJAX handler for retrieving chosen shipping method from WooCommerce session
+
+### 🔄 Compatibility
+- Works with all multistep checkout plugins where shipping method is stored in WooCommerce session
+- Compatible with custom checkout layouts using non-standard CSS selectors
+- Maintains backward compatibility with standard single-page checkouts
+
+---
+
+## Version 3.1.4 - 09.01.2026
+
+### 🐛 Bug Fixes
+- **Checkout Cart Update:** Fixed validation alert appearing when clicking "Update Cart" button on checkout pages with cart forms
+  - Changed form validation from global scope to target only checkout forms specifically
+  - Now uses targeted selectors: `form[name="checkout"]` and `form.woocommerce-checkout`
+  - Cart update forms (`.woocommerce-cart-form`) no longer trigger Econt shipping validation
+  - Added fallback handling for undefined checkout form selectors
+
+### 🔧 Technical Improvements
+- Refactored form submission validation to use existing `getCustomSelectors()` configuration system
+- Improved performance by reducing unnecessary event listeners on non-checkout forms
+- Better compatibility with various WooCommerce checkout layouts and page builders
+
+### 📊 Affected Files
+- `public/js/delivery-with-econt-checkout.js` - Refactored validation form selectors (lines 177-194)
+
+---
+
+## Version 3.1.3 - 07.01.2026
+
+### 🐛 Bug Fixes
+- **PHP 8.3 Compatibility:** Fixed settings page loading failure on PHP 8.3 environments (IIS/Windows Server)
+  - Added proper `isset()` checks before accessing `$this->options['demo_service']` array key
+  - Fixed undefined array key warning in `demo_checkbox_callback()` that caused 500 errors on strict FastCGI configurations
+  - Added `isset()` checks in `sanitize()` method for `private_key` comparison
+  - Prevents "Undefined array key" warnings on fresh installations where options haven't been saved yet
+
+### 🔧 Technical Improvements
+- Enhanced settings initialization with defensive array key checking
+- Improved error handling for uninitialized plugin options
+- Settings page now gracefully handles missing configuration data
+
+### 📊 Affected Files
+- `includes/class-delivery-with-econt-options.php` - Added array key existence checks
+
+---
+
+## Version 3.1.2 - 07.01.2026
+
+### 🚀 Major Update: WooCommerce HPOS Compatibility
+
+This release adds full compatibility with WooCommerce High-Performance Order Storage (HPOS) and WooCommerce 10.4+.
+
+#### ✨ New Features
+- **HPOS Declaration:** Official WooCommerce HPOS compatibility declaration for WooCommerce 7.1+
+- **Dual System Support:** Seamlessly works with both traditional CPT-based orders and modern HPOS orders
+
+#### 🔧 Technical Improvements
+- **Removed Deprecated Functions:**
+  - Replaced deprecated `wc_save_order_items()` with modern WooCommerce CRUD methods
+  - Updated to use `WC_Order_Item_Shipping` objects for shipping cost updates
+  - Compatible with WooCommerce 3.0+ through 10.4+
+
+- **Order Meta Handling:**
+  - Removed dual-write pattern (CPT + HPOS) that caused data inconsistency
+  - Now uses WooCommerce order object methods exclusively (`$order->update_meta_data()`, `$order->get_meta()`, `$order->delete_meta_data()`)
+  - Ensures data integrity in HPOS-only environments
+
+- **Hook Updates:**
+  - Updated order sync hooks for HPOS compatibility
+  - Added intelligent context detection (admin vs frontend)
+  - Implemented recursion prevention for order update hooks
+  - Optimized performance - admin-only sync operations don't impact frontend checkout speed
+
+#### 🐛 Bug Fixes
+- Fixed infinite loop issue that caused memory exhaustion on some installations
+- Fixed order sync only running when appropriate (admin context)
+- Prevented unnecessary sync operations during checkout flow
+
+#### 📊 Affected Files
+- `deliver-with-econt.php` - Added HPOS compatibility declaration
+- `bootstrap.php` - Updated hooks and order sync logic
+- `includes/class-delivery-with-econt.php` - Replaced deprecated functions, removed dual-write
+- `helpers.php` - Removed direct post meta calls for order data
+
+#### ⚙️ Backward Compatibility
+- Fully backward compatible with WooCommerce 3.0+
+- Works with both HPOS-enabled and CPT-based WooCommerce installations
+- No breaking changes for existing sites
+
+---
+
+## Version 3.1.1 - 06.01.2026
+
+### 🐛 Bug Fixes
+- **Payment Gateway Registration:** Fixed EcontPay payment gateway not appearing in WooCommerce settings on some sites
+  - Removed conditional registration logic that prevented gateway from showing on REST API calls
+  - Payment gateway now always registers and uses `is_available()` method for visibility control
+  - Fixed compatibility with WooCommerce 10.4 REST API endpoints
+  - Resolved issue with Elementor and other page builders where payment method disappeared
+
+### 🔧 Technical Improvements
+- Simplified payment gateway registration to follow WooCommerce best practices
+- Fixed "Undefined array key 'type'" PHP warnings in payment processing
+- Added proper `isset()` checks before accessing API response arrays
+- Improved error handling in payment gateway with fallback error messages
+
+### 📝 Documentation
+- Updated plugin compatibility tags:
+  - WordPress: Tested up to 6.7
+  - WooCommerce: Requires 3.0+, tested up to 10.4
+
+---
+
 ## Version 3.1.0 - 03.12.2025
 
 ### 🐛 Bug Fixes

@@ -69,12 +69,15 @@ jQuery(document).ready(function($){
 	}
 
 	// Toggle between Econt iframe and default WooCommerce fields
-	function toggleFieldsBasedOnShippingMethod() {
+	function toggleFieldsBasedOnShippingMethod(forceEcont) {
 		const customSelectors = getCustomSelectors();
 		const customerDetailsElement = $(customSelectors.customerDetails);
 		const fieldSelectors = buildFieldSelectors();
 
-		if (checkIfShippingMethodIsEcont()) {
+		// Allow forcing Econt mode for multistep checkouts
+		var isEcont = forceEcont === true ? true : checkIfShippingMethodIsEcont();
+
+		if (isEcont) {
 			// Hide specific fields based on configuration
 			if (fieldSelectors.length > 0) {
 				fieldSelectors.forEach(function(selector) {
@@ -142,6 +145,31 @@ jQuery(document).ready(function($){
 		return false;
 	}
 
+	// Check if Econt is selected via AJAX (for multistep checkouts)
+	function checkIfEcontSelectedViaAjax(callback) {
+		// Try to get the chosen shipping method from WooCommerce session
+		$.ajax({
+			type: 'POST',
+			url: delivery_with_econt_calculate_shipping_object.ajax_url,
+			data: {
+				action: 'get_chosen_shipping_method'
+			},
+			success: function(response) {
+				var isEcont = false;
+				if (response && typeof response === 'string' && response.indexOf('delivery_with_econt') !== -1) {
+					isEcont = true;
+				} else if (response && response.data && typeof response.data === 'string' && response.data.indexOf('delivery_with_econt') !== -1) {
+					isEcont = true;
+				}
+				callback(isEcont);
+			},
+			error: function() {
+				// Assume Econt is selected if we can't determine otherwise
+				callback(true);
+			}
+		});
+	}
+
 	// Reset cookies function
 	function resetCookies() {
 		document.cookie = "econt_shippment_price=0; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
@@ -174,8 +202,13 @@ jQuery(document).ready(function($){
 		}
 	}
 
-	// Prevent form submission with Enter key
-	$("form[name='checkout']").on('keypress', function(e) {
+	// Get checkout form selectors for validation
+	var customSelectors = getCustomSelectors();
+	var checkoutFormsArray = customSelectors.checkoutForm || ['form[name="checkout"]', 'form.woocommerce-checkout'];
+	var checkoutForms = checkoutFormsArray.join(', ');
+
+	// Prevent form submission with Enter key on checkout forms
+	$(checkoutForms).on('keypress', function(e) {
 		var key = e.which || e.keyCode;
 		if (key === 13) { // 13 is enter
 			e.preventDefault();
@@ -183,8 +216,9 @@ jQuery(document).ready(function($){
 		}
 	});
 
-	// Form submission validation - exclude coupon forms
-	$("form").not("form.woocommerce-form-coupon").submit(function(e) {
+	// Form submission validation - target only checkout forms
+
+	$(checkoutForms).submit(function(e) {
 		validateShippingPrice(e);
 	});
 
@@ -215,7 +249,6 @@ jQuery(document).ready(function($){
 		let selected_shipping_method = getSelectedShippingMethod();
 
 		let econtPrice = getCookie('econt_shippment_price');
-		console.log('Econt price from cookie:', econtPrice);
 		// Show/hide iframe based on previous selections
 		if (global_info_message !== undefined || global_shippment_price_cod ) {
 			let iframe = $('#delivery_with_econt_iframe');
@@ -374,7 +407,6 @@ jQuery(document).ready(function($){
 
 		// Only initialize if we have shipping methods and haven't initialized yet
 		if (shippingMethods.length > 0 && !isInitialized) {
-			console.log('Econt: Initializing checkout integration...');
 			isInitialized = true;
 			initializeShippingMethodToggle();
 
@@ -388,19 +420,16 @@ jQuery(document).ready(function($){
 
 	// Listen for WooCommerce init_checkout event (standard WooCommerce)
 	$(document.body).on('init_checkout', function() {
-		console.log('Econt: WooCommerce init_checkout event fired');
 		safeInitialize();
 	});
 
 	// Listen for updated_checkout event (fires after AJAX updates)
 	$(document.body).on('updated_checkout', function() {
-		console.log('Econt: WooCommerce updated_checkout event fired');
 		safeInitialize();
 	});
 
 	// Use event delegation for shipping method changes
 	$(document).on('change.econtToggle', 'input[name^="shipping_method"]', function() {
-		console.log('Econt: Shipping method changed');
 		resetCookies();
 		toggleFieldsBasedOnShippingMethod();
 		$('body').trigger('update_checkout');
@@ -415,8 +444,6 @@ jQuery(document).ready(function($){
 	// Strategy 2: Use MutationObserver to watch for shipping methods being added to DOM
 	// This is the most reliable approach for page builders (Avada, Elementor, Divi, etc.)
 	if (!isInitialized && typeof MutationObserver !== 'undefined') {
-		console.log('Econt: Setting up MutationObserver for shipping methods...');
-
 		var checkoutForm = document.querySelector('form.woocommerce-checkout, form[name="checkout"]');
 
 		if (checkoutForm) {
@@ -440,7 +467,6 @@ jQuery(document).ready(function($){
 				if (window.econtShippingObserver) {
 					window.econtShippingObserver.disconnect();
 					window.econtShippingObserver = null;
-					console.log('Econt: MutationObserver timeout reached');
 				}
 			}, 10000);
 		}
@@ -455,13 +481,9 @@ jQuery(document).ready(function($){
 	function pollForShippingMethods() {
 		if (!isInitialized && pollAttempts < maxPollAttempts) {
 			pollAttempts++;
-			console.log('Econt: Polling attempt ' + pollAttempts + '/' + maxPollAttempts);
 			safeInitialize();
 		} else {
 			clearInterval(pollInterval);
-			if (!isInitialized) {
-				console.warn('Econt: Could not find shipping methods after ' + maxPollAttempts + ' attempts');
-			}
 		}
 	}
 
@@ -471,6 +493,88 @@ jQuery(document).ready(function($){
 			pollInterval = setInterval(pollForShippingMethods, 800);
 		}
 	}, 300);
+
+	// Strategy 4: Enhanced support for multistep checkouts
+	// Watch for when customer details appears (common in multistep checkouts)
+	// This handles cases where the billing form appears after initial page load
+	// and shipping method inputs may not be visible (already selected in previous step)
+	if (typeof MutationObserver !== 'undefined') {
+		// Get custom selector for customer details
+		var customSelectors = getCustomSelectors();
+		var customerDetailsSelector = customSelectors.customerDetails || '#customer_details';
+
+		// Check immediately if the element already exists (page already loaded)
+		if ($(customerDetailsSelector).length > 0 && $('input[name^="shipping_method"]').length === 0) {
+			checkIfEcontSelectedViaAjax(function(isEcont) {
+				if (isEcont) {
+					toggleFieldsBasedOnShippingMethod(true); // Pass true to force Econt mode
+				}
+			});
+		}
+
+		var bodyObserver = new MutationObserver(function(mutations) {
+			mutations.forEach(function(mutation) {
+				// Check if customer_details or shipping method inputs were added to the DOM
+				if (mutation.addedNodes && mutation.addedNodes.length > 0) {
+					for (var i = 0; i < mutation.addedNodes.length; i++) {
+						var node = mutation.addedNodes[i];
+						if (node.nodeType === 1) { // Element node
+							var foundCustomerDetails = false;
+							var foundShippingMethods = false;
+
+							// Check if this node or its children contain customer_details
+							if ($(node).is(customerDetailsSelector) || $(node).find(customerDetailsSelector).length > 0) {
+								foundCustomerDetails = true;
+							}
+
+							// Check if this node or its children contain shipping method inputs
+							if ($(node).is('input[name^="shipping_method"]') || $(node).find('input[name^="shipping_method"]').length > 0) {
+								foundShippingMethods = true;
+							}
+
+							// If we found customer details or shipping methods
+							if (foundCustomerDetails || foundShippingMethods) {
+								// For multistep checkouts without visible shipping inputs,
+								// we need to handle initialization differently
+								var hasShippingInputs = $('input[name^="shipping_method"]').length > 0;
+
+								if (!hasShippingInputs && foundCustomerDetails) {
+									// Multistep checkout: shipping already selected, billing form just appeared
+									// Check if Econt is selected via AJAX (stored in WooCommerce session)
+									checkIfEcontSelectedViaAjax(function(isEcont) {
+										if (isEcont) {
+											// Directly trigger the iframe creation - pass true to force Econt mode
+											toggleFieldsBasedOnShippingMethod(true);
+										} else {
+											console.log('Econt: Econt not selected in multistep checkout');
+										}
+									});
+								} else if (hasShippingInputs) {
+									// Standard checkout or multistep with shipping inputs visible
+									// Reset initialization flag to allow re-initialization
+									isInitialized = false;
+									// Try to initialize again
+									safeInitialize();
+									// If successful, trigger the shipping method check
+									if (isInitialized) {
+										toggleFieldsBasedOnShippingMethod();
+									}
+								}
+							}
+						}
+					}
+				}
+			});
+		});
+
+		// Observe the entire document body for changes
+		bodyObserver.observe(document.body, {
+			childList: true,
+			subtree: true
+		});
+
+		console.log('Econt: Enhanced multistep checkout observer initialized');
+	}
 });
 
 /**
