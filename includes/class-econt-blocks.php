@@ -43,7 +43,7 @@ class Econt_Blocks {
 
 	    foreach (WC()->cart->get_cart() as $cart_item) {
 		    $product = $cart_item['data'];
-		    $weight = $product->get_weight();
+		    $weight = $product->get_weight() * Delivery_With_Econt_Shipping::weight_unit_fixer();
 		    $quantity = (int)$cart_item['quantity'];
 
 		    // Check if weight is an empty string
