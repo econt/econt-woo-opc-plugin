@@ -30,7 +30,7 @@
 }
 
 .econt-loader {
-  background-image: url("/wp-content/plugins/econt-woo-opc-plugin/public/images/loader.gif") !important;
+  background-image: url("../images/loader.gif") !important;
   background-position: center 30% !important;
   background-repeat: no-repeat !important;
   /*background-color: white;*/
