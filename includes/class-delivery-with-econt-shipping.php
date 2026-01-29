@@ -108,6 +108,7 @@ class Delivery_With_Econt_Shipping extends WC_Shipping_Method
         $order = array();
         $order['order_total'] = DWEH()->econt_calculate_cart_price($econt_cart);
         $order['order_weight'] = WC()->cart->get_cart_contents_weight() * self::weight_unit_fixer();
+		$order['order_weight'] = $order['order_weight'] > 0.005 ? $order['order_weight'] : 0.005; // Minimum weight is 5gr.
         $order['pack_count'] = 1;
         $order['order_currency'] = get_woocommerce_currency();
         $order['id_shop'] = $options['store_id'];
