@@ -4,6 +4,17 @@ All notable changes to the Econt Delivery OneCheckout plugin will be documented 
 
 ---
 
+## Version 3.1.7 - 09.10.2026
+
+### 🐛 Bug Fixes
+- **Shipping Method Selection:** Fixed Econt shipping method being replaced by another method after the Econt form is submitted
+  - Submitting the Econt form fills in the customer address, and other shipping methods can return a different set of rates for it
+  - WooCommerce then resets the chosen method to the first rate in the list, so the customer lost the Econt selection
+  - Econt now stays selected as long as it is still available for the new address
+  - A shipping method chosen manually by the customer is not affected
+
+---
+
 ## Version 3.1.6 - 29.01.2026
 
 ### 🐛 Bug Fixes
