@@ -107,7 +107,8 @@ class Delivery_With_Econt_Shipping extends WC_Shipping_Method
         // Build order data
         $order = array();
         $order['order_total'] = DWEH()->econt_calculate_cart_price($econt_cart);
-        $order['order_weight'] = WC()->cart->get_cart_contents_weight();
+        $order['order_weight'] = WC()->cart->get_cart_contents_weight() * self::weight_unit_fixer();
+		$order['order_weight'] = $order['order_weight'] > 0.005 ? $order['order_weight'] : 0.005; // Minimum weight is 5gr.
         $order['pack_count'] = 1;
         $order['order_currency'] = get_woocommerce_currency();
         $order['id_shop'] = $options['store_id'];
@@ -130,6 +131,22 @@ class Delivery_With_Econt_Shipping extends WC_Shipping_Method
         wp_send_json($full_url);
     }
 
+	public static function weight_unit_fixer() {
+        $weight_unit = get_option('woocommerce_weight_unit');
+        switch ($weight_unit) {
+            case 'kg':
+                return 1;
+            case 'g':
+                return 0.001;
+            case 'lbs':
+                return 0.453592;
+            case 'oz':
+                return 0.0283495;
+            default:
+                return 1; // Default to kg if unknown
+        }
+    }
+	
     public static function render_form_button($checkout){
             return;
     }

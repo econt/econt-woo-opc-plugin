@@ -138,7 +138,7 @@ class Delivery_With_Econt_Helper
 
 			$price = $item->get_total() + $item->get_total_tax();
 			$quantity = intval($item->get_quantity());
-			$weight = floatval($product->get_weight());
+			$weight = floatval($product->get_weight()) * Delivery_With_Econt_Shipping::weight_unit_fixer();
 			$product_name = $product->get_name();
 
 			$data['items'][] = [
