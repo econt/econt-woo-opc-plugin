@@ -4,6 +4,15 @@ All notable changes to the Econt Delivery OneCheckout plugin will be documented 
 
 ---
 
+## Version 3.1.8 - 22.10.2026
+
+### 🔧 Improvements
+- **Admin Waybill Buttons:** The waybill status for the Generate/Print and refresh buttons is now requested through the WordPress server
+  - The buttons in the order list and on the order page work as before
+  - The admin script is loaded with a new version, so browsers do not keep the old copy after the update
+
+---
+
 ## Version 3.1.7 - 09.10.2026
 
 ### 🐛 Bug Fixes
