@@ -244,7 +244,8 @@ function delivery_with_econt_enque_scripts_and_styles() {
 	);
 
 	wp_enqueue_style('delivery_with_econt_calculate_shipping', plugin_dir_url(__FILE__) . 'public/css/delivery-with-econt-checkout.css', [], false);
-	wp_enqueue_script('delivery_with_econt_calculate_shipping', plugin_dir_url(__FILE__) . 'public/js/delivery-with-econt-checkout.js', ['jquery'], false, true);
+	// Version by file time, so a cached copy of the old script is not used after an update
+	wp_enqueue_script('delivery_with_econt_calculate_shipping', plugin_dir_url(__FILE__) . 'public/js/delivery-with-econt-checkout.js', ['jquery'], filemtime(ECONT_PLUGIN_DIR . 'public/js/delivery-with-econt-checkout.js'), true);
 	//wp_localize_script( 'delivery_with_econt_calculate_shipping', 'delivery_with_econt_calculate_shipping_object', array('ajax_url' => admin_url('admin-ajax.php'), 'security'  => wp_create_nonce( 'delivery-with-econt-security-nonce' )));
 	wp_localize_script('delivery_with_econt_calculate_shipping', 'delivery_with_econt_calculate_shipping_object', ['delivery_url' => Delivery_With_Econt_Shipping::get_delivery_url(), 'ajax_url' => admin_url('admin-ajax.php'), 'security' => wp_create_nonce('delivery-with-econt-security-nonce')]);
 
