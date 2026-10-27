@@ -576,8 +576,6 @@ jQuery(document).ready(function($){
 										if (isEcont) {
 											// Directly trigger the iframe creation - pass true to force Econt mode
 											toggleFieldsBasedOnShippingMethod(true);
-										} else {
-											console.log('Econt: Econt not selected in multistep checkout');
 										}
 									});
 								} else if (hasShippingInputs) {
@@ -603,8 +601,6 @@ jQuery(document).ready(function($){
 			childList: true,
 			subtree: true
 		});
-
-		console.log('Econt: Enhanced multistep checkout observer initialized');
 	}
 });
 

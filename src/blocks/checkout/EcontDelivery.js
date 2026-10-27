@@ -483,15 +483,10 @@ const EcontDelivery = () => {
 
 // Enhanced version of your existing updateFieldsDirectly function
     const updateFieldsDirectly = (addressData) => {
-        console.log('updateFieldsDirectly')
-        console.log(typeof jQuery !== "undefined")
         if (typeof jQuery !== "undefined") {
             const fields = ["first_name", "last_name", "company", "address_1", "city", "postcode", "phone", "email"]
-            console.log('123')
 
             fields.forEach((field) => {
-                console.log('foreach')
-
                 const value = addressData[field] || ""
 
                 // Your original selectors plus additional ones for better compatibility
@@ -510,8 +505,6 @@ const EcontDelivery = () => {
                 let fieldUpdated = false
 
                 selectors.forEach(selector => {
-                    console.log('selectors foreach')
-
                     const $field = jQuery(selector)
                     if ($field.length > 0) {
                         const oldValue = $field.val()
@@ -522,7 +515,6 @@ const EcontDelivery = () => {
                             .trigger('input')
                             .trigger('change')
                             .trigger('blur')
-                        console.log($field.val())
                         // Also try native events for React controlled components
                         const element = $field[0]
                         if (element) {
