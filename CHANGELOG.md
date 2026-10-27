@@ -11,6 +11,7 @@ All notable changes to the Econt Delivery OneCheckout plugin will be documented 
   - The order is not accepted if Econt gives no price, in the classic and in the block checkout
   - If the price for the payment method of the order is different, the checkout asks to review the new total
 - **Requests to Econt:** The TLS certificate of Econt is verified; connection errors are written to the PHP error log
+- **Logging:** Debug output on plugin updates is no longer written to the PHP error log
 - **Currency:** Where the cart or the order gives no currency, the currency of the store is used instead of BGN
 
 ---
