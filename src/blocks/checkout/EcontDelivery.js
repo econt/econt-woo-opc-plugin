@@ -4,6 +4,9 @@ import { useSelect, useDispatch } from "@wordpress/data"
 import { applyFilters } from "@wordpress/hooks"
 import { createPortal } from "react-dom"
 
+// Currency of the store (WooCommerce settings on the page), for when the cart does not give one
+const getStoreCurrency = () => window.wcSettings?.currency?.code || ""
+
 const EcontDelivery = () => {
     // Debug mode check - looks for ?econt_debug=1 in URL
     const isDebugMode = () => {
@@ -94,7 +97,7 @@ const EcontDelivery = () => {
 
             cart = {
                 total: Number.parseFloat(cartData.totals?.total_items) / 100 || 0,
-                currency: store.getCartTotals()?.currency_code || "BGN",
+                currency: store.getCartTotals()?.currency_code || getStoreCurrency(),
                 weight: finalWeight,
             }
 
@@ -320,7 +323,7 @@ const EcontDelivery = () => {
         const cartParams = {
             ...params,
             order_total: cartData.total || 0,
-            order_currency: cartData.currency || "BGN",
+            order_currency: cartData.currency || getStoreCurrency(),
             pack_count: 1,
             order_weight: cartData.weight,
         }
