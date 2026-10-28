@@ -4,6 +4,18 @@ All notable changes to the Econt Delivery OneCheckout plugin will be documented 
 
 ---
 
+## Version 3.1.9 - 23.10.2026
+
+### 🔧 Improvements
+- **Shipping Price:** The Econt shipping price of the cart is taken from Econt on the server, for the chosen address and payment method
+  - The order is not accepted if Econt gives no price, in the classic and in the block checkout
+  - If the price for the payment method of the order is different, the checkout asks to review the new total
+- **Requests to Econt:** The TLS certificate of Econt is verified; connection errors are written to the PHP error log
+- **Logging:** Debug output on plugin updates is no longer written to the PHP error log; the checkout and admin scripts no longer write debug output to the browser console
+- **Currency:** Where the cart or the order gives no currency, the currency of the store is used instead of BGN
+
+---
+
 ## Version 3.1.8 - 22.10.2026
 
 ### 🔧 Improvements

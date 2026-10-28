@@ -99,6 +99,14 @@ msgid "You can't submit order, if shipping price is not calculated properly!"
 msgstr ""
 "Не може да финализирате поръка, без да сте калкулирали цената на доставка!"
 
+#: bootstrap.php
+msgid ""
+"The Econt shipping price has changed. Please review the updated total and "
+"place your order again."
+msgstr ""
+"Цената на доставката с Еконт се промени. Моля, прегледайте новата сума и "
+"направете поръчката отново."
+
 #: includes/admin/class-delivery-with-econt-admin.php:21
 msgid "Waybill"
 msgstr "Товарителница"

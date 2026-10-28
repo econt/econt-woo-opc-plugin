@@ -4,6 +4,9 @@ import { useSelect, useDispatch } from "@wordpress/data"
 import { applyFilters } from "@wordpress/hooks"
 import { createPortal } from "react-dom"
 
+// Currency of the store (WooCommerce settings on the page), for when the cart does not give one
+const getStoreCurrency = () => window.wcSettings?.currency?.code || ""
+
 const EcontDelivery = () => {
     // Debug mode check - looks for ?econt_debug=1 in URL
     const isDebugMode = () => {
@@ -94,7 +97,7 @@ const EcontDelivery = () => {
 
             cart = {
                 total: Number.parseFloat(cartData.totals?.total_items) / 100 || 0,
-                currency: store.getCartTotals()?.currency_code || "BGN",
+                currency: store.getCartTotals()?.currency_code || getStoreCurrency(),
                 weight: finalWeight,
             }
 
@@ -320,7 +323,7 @@ const EcontDelivery = () => {
         const cartParams = {
             ...params,
             order_total: cartData.total || 0,
-            order_currency: cartData.currency || "BGN",
+            order_currency: cartData.currency || getStoreCurrency(),
             pack_count: 1,
             order_weight: cartData.weight,
         }
@@ -483,15 +486,10 @@ const EcontDelivery = () => {
 
 // Enhanced version of your existing updateFieldsDirectly function
     const updateFieldsDirectly = (addressData) => {
-        console.log('updateFieldsDirectly')
-        console.log(typeof jQuery !== "undefined")
         if (typeof jQuery !== "undefined") {
             const fields = ["first_name", "last_name", "company", "address_1", "city", "postcode", "phone", "email"]
-            console.log('123')
 
             fields.forEach((field) => {
-                console.log('foreach')
-
                 const value = addressData[field] || ""
 
                 // Your original selectors plus additional ones for better compatibility
@@ -510,8 +508,6 @@ const EcontDelivery = () => {
                 let fieldUpdated = false
 
                 selectors.forEach(selector => {
-                    console.log('selectors foreach')
-
                     const $field = jQuery(selector)
                     if ($field.length > 0) {
                         const oldValue = $field.val()
@@ -522,7 +518,6 @@ const EcontDelivery = () => {
                             .trigger('input')
                             .trigger('change')
                             .trigger('blur')
-                        console.log($field.val())
                         // Also try native events for React controlled components
                         const element = $field[0]
                         if (element) {

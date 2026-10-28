@@ -100,7 +100,6 @@ const EcontAlwaysLoadedContent = () => {
 
         const checkShippingPrice = () => {
             const econtPrice = getCookie('econt_shippment_price');
-            console.log('Econt price check:', econtPrice);
 
             // If cookie is "0", restore original "Free" text
             if (econtPrice === '0') {
@@ -155,7 +154,6 @@ const EcontAlwaysLoadedContent = () => {
     return null;
 };
 
-console.log('Registering Econt delivery block plugins');
 
 // Check if plugins are already registered to prevent duplicate registration
 const { isPluginActive } = wp.plugins || {};
