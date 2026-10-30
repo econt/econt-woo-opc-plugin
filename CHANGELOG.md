@@ -14,6 +14,7 @@ All notable changes to the Econt Delivery OneCheckout plugin will be documented 
 - **Logging:** Debug output on plugin updates is no longer written to the PHP error log; the checkout and admin scripts no longer write debug output to the browser console
 - **Currency:** Where the cart or the order gives no currency, the currency of the store is used instead of BGN
 - **Admin Waybill Form:** The waybill form opens with a session for the order that the WordPress server gets from Econt
+- **Econt Form Messages:** Messages from the Econt form are accepted only from the Econt service, in the checkout and in the admin
 
 ---
 

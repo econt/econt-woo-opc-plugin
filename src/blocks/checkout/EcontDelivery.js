@@ -546,6 +546,12 @@ const EcontDelivery = () => {
 
     // Handle postMessage events from iframe
     const handleIframeMessage = async (event) => {
+        // Only messages from the Econt delivery system (exact origin of the service URL)
+        const econtServiceUrl = document.querySelector('meta[name="econt-service-url"]')?.content
+        if (!econtServiceUrl || event.origin !== new URL(econtServiceUrl).origin) {
+            return
+        }
+
         const data = event.data
 
         // Skip if not a submission event
