@@ -13,6 +13,10 @@ All notable changes to the Econt Delivery OneCheckout plugin will be documented 
 - **Requests to Econt:** The TLS certificate of Econt is verified; connection errors are written to the PHP error log
 - **Logging:** Debug output on plugin updates is no longer written to the PHP error log; the checkout and admin scripts no longer write debug output to the browser console
 - **Currency:** Where the cart or the order gives no currency, the currency of the store is used instead of BGN
+- **Admin Waybill Form:** The waybill form opens with a session for the order that the WordPress server gets from Econt
+- **Econt Form Messages:** Messages from the Econt form are accepted only from the Econt service, in the checkout and in the admin
+- **Admin Waybill Form:** The waybill session is asked for the order ID, as in the sync with Econt
+- **Settings:** The private key is not shown in the settings page; an empty field keeps the saved key
 
 ---
 
