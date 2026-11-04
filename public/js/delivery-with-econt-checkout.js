@@ -306,8 +306,8 @@ jQuery(document).ready(function($){
 	window.addEventListener('message', function(message) {
 		let econt_service_url = $('meta[name="econt-service-url"]')[0].content;
 
-		// Check if this "message" came from Econt delivery system
-		if (econt_service_url.indexOf(message.origin) < 0) return;
+		// Only messages from the Econt delivery system (exact origin of the service URL)
+		if (message.origin !== new URL(econt_service_url).origin) return;
 
 		globalAlertMessage = false;
 
