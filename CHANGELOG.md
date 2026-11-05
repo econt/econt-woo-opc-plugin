@@ -4,6 +4,54 @@ All notable changes to the Econt Delivery OneCheckout plugin will be documented 
 
 ---
 
+## Version 3.1.7 - 09.10.2026
+
+### 🐛 Bug Fixes
+- **Shipping Method Selection:** Fixed Econt shipping method being replaced by another method after the Econt form is submitted
+  - Submitting the Econt form fills in the customer address, and other shipping methods can return a different set of rates for it
+  - WooCommerce then resets the chosen method to the first rate in the list, so the customer lost the Econt selection
+  - Econt now stays selected as long as it is still available for the new address
+  - A shipping method chosen manually by the customer is not affected
+
+---
+
+## Version 3.1.6 - 29.01.2026
+
+### 🐛 Bug Fixes
+- **Field Population:** Fixed issue where both billing and shipping fields were not being populated when Econt iframe is submitted
+  - Plugin now updates **both** billing and shipping address fields simultaneously
+  - Ensures compatibility with checkout forms that have both billing and shipping fields enabled and required
+  - Particularly fixes issues with Checkout Form plugins and similar implementations
+  - Safe implementation: fields that don't exist are gracefully skipped without errors
+
+- **Iframe Reloading:** Fixed iframe reopening after submission when WooCommerce updates checkout
+  - Added intelligent check to prevent iframe reload if shipping data is already submitted
+  - Iframe now stays hidden after submission and doesn't automatically reopen
+  - "Edit details" button functionality preserved for manual iframe reopening
+  - Prevents unnecessary AJAX requests and improves user experience
+
+- **Loader Image Path:** Fixed 404 error for loader.gif image
+  - Changed from hardcoded absolute path to relative path
+  - Now works correctly on all WordPress installations (subdirectory, multisite, custom content directory)
+  - Path changed from `/wp-content/plugins/...` to `../images/loader.gif`
+
+### 🔧 Technical Improvements
+- Enhanced `toggleFieldsBasedOnShippingMethod()` function with shipping data check
+- Improved field update logic to handle both billing and shipping fields in parallel
+- Added state/province field updates for both billing and shipping addresses
+- Optimized iframe reload prevention logic using global shipping price variables
+
+### 📊 Affected Files
+- `public/js/delivery-with-econt-checkout.js` - Updated field population logic (lines 365-423) and iframe reload prevention (lines 103-111)
+- `public/css/delivery-with-econt-checkout.css` - Fixed loader image path (line 33)
+
+### 🔄 Compatibility
+- Works with checkout forms requiring both billing and shipping fields
+- Compatible with Checkout Form plugins and custom checkout implementations
+- Maintains backward compatibility with sites using only billing fields or only shipping fields
+
+---
+
 ## Version 3.1.5 - 12.01.2026
 
 ### ✨ New Features - Multistep Checkout Support

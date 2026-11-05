@@ -100,8 +100,15 @@ jQuery(document).ready(function($){
 				$("#place_iframe_here").show();
 			}
 
-			// Load Econt iframe
-			getDataFromForm(use_shipping).then();
+			// Only load Econt iframe if it hasn't been submitted yet
+			// Check if iframe already exists and if shipping prices are already set
+			var iframeExists = $('#delivery_with_econt_iframe').length > 0;
+			var hasShippingData = global_shippment_price_cod !== undefined && global_shippment_price_no_cod !== undefined;
+
+			if (!iframeExists || !hasShippingData) {
+				// Load Econt iframe only if not yet submitted
+				getDataFromForm(use_shipping).then();
+			}
 		} else {
 			// Show hidden fields for other shipping methods
 			if (fieldSelectors.length > 0) {
@@ -362,34 +369,58 @@ jQuery(document).ready(function($){
 				full_name = data['name'].split(' ');
 			}
 
-			// Fill in form fields with received data
-			var prefix = (use_shipping ? 'shipping' : 'billing');
+			// Fill in form fields with received data - update BOTH billing and shipping fields
+			var addressValue = data['address'] != '' ? addressText + data['address'] : officeText + data['office_name_only'];
 
-			setFieldValue(prefix + '_first_name', full_name[0] || '');
-			setFieldValue(prefix + '_last_name', full_name[1] || '');
-			setFieldValue(prefix + '_company', company);
-			setFieldValue(prefix + '_address_1', data['address'] != '' ? addressText + data['address'] : officeText + data['office_name_only']);
-			setFieldValue(prefix + '_city', data['city_name']);
-			setFieldValue(prefix + '_postcode', data['post_code']);
+			// Update billing fields
+			setFieldValue('billing_first_name', full_name[0] || '');
+			setFieldValue('billing_last_name', full_name[1] || '');
+			setFieldValue('billing_company', company);
+			setFieldValue('billing_address_1', addressValue);
+			setFieldValue('billing_city', data['city_name']);
+			setFieldValue('billing_postcode', data['post_code']);
+			setFieldValue('billing_phone', data['phone']);
+			setFieldValue('billing_email', data['email']);
 
-// Handle state selection (keep existing code)
-			var $state = jQuery("#" + prefix + '_state');
-			if ($state.length) {
-				$state.find("option").each(function() {
+			// Update shipping fields
+			setFieldValue('shipping_first_name', full_name[0] || '');
+			setFieldValue('shipping_last_name', full_name[1] || '');
+			setFieldValue('shipping_company', company);
+			setFieldValue('shipping_address_1', addressValue);
+			setFieldValue('shipping_city', data['city_name']);
+			setFieldValue('shipping_postcode', data['post_code']);
+
+			// Handle state selection for billing
+			var $billingState = jQuery("#billing_state");
+			if ($billingState.length) {
+				$billingState.find("option").each(function() {
 					var $this = jQuery(this);
 					if ($this.text() === data["city_name"]) {
-						$state.val($this.val());
+						$billingState.val($this.val());
 						return false;
 					}
 				});
-				if ($state.val() === "") {
-					$state.val($state.find("option:eq(1)").val());
+				if ($billingState.val() === "") {
+					$billingState.val($billingState.find("option:eq(1)").val());
 				}
-				$state.change();
+				$billingState.change();
 			}
 
-			setFieldValue('billing_phone', data['phone']);
-			setFieldValue('billing_email', data['email']);
+			// Handle state selection for shipping
+			var $shippingState = jQuery("#shipping_state");
+			if ($shippingState.length) {
+				$shippingState.find("option").each(function() {
+					var $this = jQuery(this);
+					if ($this.text() === data["city_name"]) {
+						$shippingState.val($this.val());
+						return false;
+					}
+				});
+				if ($shippingState.val() === "") {
+					$shippingState.val($shippingState.find("option:eq(1)").val());
+				}
+				$shippingState.change();
+			}
 
 			document.cookie = "econt_customer_info_id=" + data['id'] + "; path=/";
 
