@@ -18,6 +18,11 @@ All notable changes to the Econt Delivery OneCheckout plugin will be documented 
 - **Admin Waybill Form:** The waybill session is asked for the order ID, as in the sync with Econt
 - **Settings:** The private key is not shown in the settings page; an empty field keeps the saved key
 
+### 🐛 Bug Fixes
+- **State/Region (Classic Checkout):** The billing and shipping state is set from the region of the city chosen in the Econt form
+  - Before, the state was looked up by the city name, so for most cities no state matched and the first one in the list (Blagoevgrad) was chosen
+  - If no state matches the region, the field is left as it is
+
 ---
 
 ## Version 3.1.8 - 22.10.2026

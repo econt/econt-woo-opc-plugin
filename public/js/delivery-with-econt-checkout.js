@@ -390,37 +390,10 @@ jQuery(document).ready(function($){
 			setFieldValue('shipping_city', data['city_name']);
 			setFieldValue('shipping_postcode', data['post_code']);
 
-			// Handle state selection for billing
-			var $billingState = jQuery("#billing_state");
-			if ($billingState.length) {
-				$billingState.find("option").each(function() {
-					var $this = jQuery(this);
-					if ($this.text() === data["city_name"]) {
-						$billingState.val($this.val());
-						return false;
-					}
-				});
-				if ($billingState.val() === "") {
-					$billingState.val($billingState.find("option:eq(1)").val());
-				}
-				$billingState.change();
-			}
-
-			// Handle state selection for shipping
-			var $shippingState = jQuery("#shipping_state");
-			if ($shippingState.length) {
-				$shippingState.find("option").each(function() {
-					var $this = jQuery(this);
-					if ($this.text() === data["city_name"]) {
-						$shippingState.val($this.val());
-						return false;
-					}
-				});
-				if ($shippingState.val() === "") {
-					$shippingState.val($shippingState.find("option:eq(1)").val());
-				}
-				$shippingState.change();
-			}
+			// The state is the region of the city from the Econt form (region_name, e.g. "София Област").
+			// Without a matching option the field is left as it is.
+			setStateFromRegion('billing_state', data['region_name']);
+			setStateFromRegion('shipping_state', data['region_name']);
 
 			document.cookie = "econt_customer_info_id=" + data['id'] + "; path=/";
 
@@ -762,4 +735,19 @@ function setFieldValue(fieldId, value) {
 	if ($field.length) {
 		$field.val(value).trigger('change').trigger('input');
 	}
+}
+
+// Selects the state option whose name is the region from the Econt form
+function setStateFromRegion(fieldId, regionName) {
+	var $state = jQuery('#' + fieldId);
+	var region = jQuery.trim(regionName || '').toLowerCase();
+	if (!$state.length || region === '') return;
+
+	$state.find('option').each(function() {
+		var $option = jQuery(this);
+		if ($option.val() !== '' && jQuery.trim($option.text()).toLowerCase() === region) {
+			$state.val($option.val()).trigger('change');
+			return false;
+		}
+	});
 }
