@@ -131,22 +131,14 @@ class Delivery_With_Econt_Shipping extends WC_Shipping_Method
         wp_send_json($full_url);
     }
 
+	/**
+	 * Factor converting the shop weight unit (WooCommerce > Settings > Products) to kg,
+	 * which is what the Econt service expects. Uses WooCommerce's own conversion table.
+	 */
 	public static function weight_unit_fixer() {
-        $weight_unit = get_option('woocommerce_weight_unit');
-        switch ($weight_unit) {
-            case 'kg':
-                return 1;
-            case 'g':
-                return 0.001;
-            case 'lbs':
-                return 0.453592;
-            case 'oz':
-                return 0.0283495;
-            default:
-                return 1; // Default to kg if unknown
-        }
-    }
-	
+		return (float) wc_get_weight( 1, 'kg' );
+	}
+
     public static function render_form_button($checkout){
             return;
     }
