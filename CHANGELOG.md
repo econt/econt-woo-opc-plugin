@@ -4,6 +4,17 @@ All notable changes to the Econt Delivery OneCheckout plugin will be documented 
 
 ---
 
+## Version 3.1.10 - 17.11.2026
+
+### 🐛 Bug Fixes
+- **Orders above the legal limit for cash payments:** Orders with bank transfer, card or another payment method without cash on delivery can be placed again (ITDEV-1342)
+  - Before, when Econt did not allow cash on delivery for the order (e.g. above 5112.92 €), the checkout got no shipping price at all and no order could be placed
+  - The shipping price without cash on delivery is used; orders with cash on delivery or Econt Pay are not accepted, with the reason from Econt
+  - The Econt form is opened with `separate_cod_error=1`, so it gives the price without cash on delivery and the reason in `shipment_error_cod`
+- **Econt Form Errors (Block Checkout):** An error from the Econt form is shown above the form; before, nothing happened when the customer confirmed it
+
+---
+
 ## Version 3.1.9 - 23.10.2026
 
 ### 🔧 Improvements

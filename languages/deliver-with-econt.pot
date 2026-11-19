@@ -278,3 +278,12 @@ msgstr ""
 #: includes/class-econt-blocks.php:71
 msgid "Calculating..."
 msgstr ""
+
+#: helpers.php
+msgid "Econt did not calculate a price with cash on delivery."
+msgstr ""
+
+#: bootstrap.php includes/class-econt-blocks.php
+#, php-format
+msgid "Cash on delivery and Econt Pay are not possible for this order: %s Please choose another payment method."
+msgstr ""
