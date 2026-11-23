@@ -59,6 +59,21 @@ const EcontDelivery = () => {
     const [portalContainer, setPortalContainer] = useState(null)
     const [isOrderButtonDisabled, setIsOrderButtonDisabled] = useState(false)
     const [isIframeLoading, setIsIframeLoading] = useState(true)
+    // Error of the Econt form (shipment_error): the form stays open and the customer sees why
+    const [formError, setFormError] = useState("")
+    // Why Econt does not allow cash on delivery (shipment_error_cod), e.g. above the legal limit for cash payments
+    const [codError, setCodError] = useState("")
+
+    // Cash on delivery and Econt Pay are sent to Econt as shipments with cash on delivery
+    const activePaymentMethod = useSelect((select) => {
+        try {
+            return select("wc/store/payment")?.getActivePaymentMethod?.() ?? null
+        } catch (e) {
+            return null
+        }
+    }, [])
+    // Without the payment store the message is shown for every payment method
+    const isCodPaymentSelected = activePaymentMethod === null || ["cod", "econt_payment"].includes(activePaymentMethod)
 
     // Refs
     const isMountedRef = useRef(true)
@@ -554,10 +569,20 @@ const EcontDelivery = () => {
 
         const data = event.data
 
-        // Skip if not a submission event
-        if (data.shipment_error || data.shipping_price == null || isNaN(Number(data.shipping_price)) || !data.name) {
+        // The Econt form could not calculate the delivery; it stays open, so the customer can change the data
+        if (data && data.shipment_error) {
+            setFormError(String(data.shipment_error))
             return
         }
+
+        // Skip if not a submission event
+        if (!data || data.shipping_price == null || isNaN(Number(data.shipping_price)) || !data.name) {
+            return
+        }
+
+        setFormError("")
+        // With shipment_error_cod the prices with cash on delivery are null: the order is possible only without it
+        setCodError(data.shipment_error_cod ? String(data.shipment_error_cod) : "")
 
         debugLog("MESSAGE", "Processing valid shipment data", data)
 
@@ -870,6 +895,40 @@ const EcontDelivery = () => {
                 }}
             >
                 <h3>{sectionTitleText}</h3>
+                {/* Error of the Econt form */}
+                {isEcontSelected && formError && (
+                    <div
+                        className="econt-form-error"
+                        role="alert"
+                        style={{
+                            marginBottom: "10px",
+                            padding: "10px",
+                            backgroundColor: "#fdecea",
+                            border: "1px solid #d63638",
+                            borderRadius: "4px",
+                            fontSize: "14px",
+                        }}
+                    >
+                        {formError}
+                    </div>
+                )}
+                {/* Cash on delivery is not possible for this order */}
+                {isEcontSelected && !isEditing && codError && isCodPaymentSelected && (
+                    <div
+                        className="econt-cod-error"
+                        role="alert"
+                        style={{
+                            marginBottom: "10px",
+                            padding: "10px",
+                            backgroundColor: "#fdecea",
+                            border: "1px solid #d63638",
+                            borderRadius: "4px",
+                            fontSize: "14px",
+                        }}
+                    >
+                        {getTranslation("Cash on delivery and Econt Pay are not possible for this order: %s Please choose another payment method.").replace("%s", codError)}
+                    </div>
+                )}
                 {/* Iframe container */}
                 <div
                     className="econt-iframe-container"

@@ -69,6 +69,7 @@ class Econt_Blocks {
 		    'Delivery to office:' => __('Delivery to office:', 'deliver-with-econt'),
 		    'Delivery to address:' => __('Delivery to address:', 'deliver-with-econt'),
 		    'Calculating...' => __('Calculating...', 'deliver-with-econt'),
+		    'Cash on delivery and Econt Pay are not possible for this order: %s Please choose another payment method.' => __('Cash on delivery and Econt Pay are not possible for this order: %s Please choose another payment method.', 'deliver-with-econt'),
 		    'Free' => __('Free', 'woocommerce')
 	    );
 

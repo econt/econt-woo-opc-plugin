@@ -3,6 +3,9 @@ jQuery(document).ready(function($){
 	let global_shippment_price_cod_e;
 	let global_shippment_price_no_cod;
 	let global_info_message;
+	// Why Econt does not allow cash on delivery (shipment_error_cod from the Econt form), e.g. above the legal limit
+	// for cash payments; empty if it is possible
+	let global_cod_error = '';
 	let use_shipping = false;
 	var globalAlertMessage = false;
 
@@ -186,6 +189,30 @@ jQuery(document).ready(function($){
 		global_shippment_price_cod_e = undefined;
 		global_shippment_price_no_cod = undefined;
 		global_info_message = undefined;
+		global_cod_error = '';
+	}
+
+	// Shows an error above the Econt form for a few seconds
+	function showEcontError(text) {
+		$('#econt_display_error_message').empty().text(text);
+
+		$('.econt-alert').addClass('active');
+		$('html,body').animate({scrollTop: $('#delivery_with_econt_calculate_shipping').offset().top - 50}, 750);
+		setTimeout(function() {
+			$('.econt-alert').removeClass('active');
+		}, 3500);
+	}
+
+	// Cash on delivery and Econt Pay are sent to Econt as shipments with cash on delivery
+	function isCodPaymentSelected() {
+		return checkIfPaymentMethodIsSelected('payment_method_cod') || checkIfPaymentMethodIsSelected('payment_method_econt_payment');
+	}
+
+	function codErrorText() {
+		var locale = document.documentElement.lang.split('-')[0];
+		return (locale === 'bg')
+			? 'Наложен платеж и Econt Pay не са възможни за тази поръчка: ' + global_cod_error + ' Моля, изберете друг начин на плащане.'
+			: 'Cash on delivery and Econt Pay are not possible for this order: ' + global_cod_error + ' Please choose another payment method.';
 	}
 
 	// Prevent form submission if Econt is selected but shipping price not confirmed
@@ -205,6 +232,14 @@ jQuery(document).ready(function($){
 			alert(alertText);
 			$('body').trigger('update_checkout');
 			globalAlertMessage = true;
+			return false;
+		}
+
+		// The server does not accept the order either, but its error would reset the confirmed Econt form
+		if (checkIfShippingMethodIsEcont() && global_cod_error && isCodPaymentSelected()) {
+			e.preventDefault();
+			e.stopPropagation();
+			showEcontError(codErrorText());
 			return false;
 		}
 	}
@@ -267,11 +302,13 @@ jQuery(document).ready(function($){
 		payment_input.each((key, field) => {
 			$('#' + field.id).change(function() {
 				if (this.value == 'cod' && selected_shipping_method === 'delivery_with_econt') {
-					document.cookie = "econt_shippment_price=" + global_shippment_price_cod + "; path=/";
+					document.cookie = "econt_shippment_price=" + (global_shippment_price_cod ?? global_shippment_price_no_cod) + "; path=/";
 					$('#econt_detailed_shipping').css('display', 'block');
+					if (global_cod_error) showEcontError(codErrorText());
 				} else if (this.value == 'econt_payment' && selected_shipping_method === 'delivery_with_econt') {
-					document.cookie = "econt_shippment_price=" + global_shippment_price_cod_e + "; path=/";
+					document.cookie = "econt_shippment_price=" + (global_shippment_price_cod_e ?? global_shippment_price_no_cod) + "; path=/";
 					$('#econt_detailed_shipping').css('display', 'block');
+					if (global_cod_error) showEcontError(codErrorText());
 				} else if (selected_shipping_method === 'delivery_with_econt') {
 					document.cookie = "econt_shippment_price=" + global_shippment_price_no_cod + "; path=/";
 					$('#econt_detailed_shipping').css('display', 'none');
@@ -316,13 +353,7 @@ jQuery(document).ready(function($){
 
 		// Handle shipping errors
 		if (data['shipment_error'] && data['shipment_error'] !== '') {
-			$('#econt_display_error_message').empty().append(data['shipment_error']);
-
-			$('.econt-alert').addClass('active');
-			$('html,body').animate({scrollTop: $('#delivery_with_econt_calculate_shipping').offset().top - 50}, 750);
-			setTimeout(function() {
-				$('.econt-alert').removeClass('active');
-			}, 3500);
+			showEcontError(data['shipment_error']);
 
 			return false;
 		}
@@ -335,10 +366,14 @@ jQuery(document).ready(function($){
 		global_shippment_price_cod = data['shipping_price_cod'];
 		global_shippment_price_cod_e = data['shipping_price_cod_e'];
 		global_shippment_price_no_cod = data['shipping_price'];
+		// With shipment_error_cod the prices with cash on delivery are null: the order is possible only without it
+		global_cod_error = data['shipment_error_cod'] || '';
 
 		if (codInput && codInput.checked) shipmentPrice = data['shipping_price_cod'];
 		else if (econt_payment_input && econt_payment_input.checked) shipmentPrice = data['shipping_price_cod_e'];
 		else shipmentPrice = data['shipping_price'];
+		if (shipmentPrice == null) shipmentPrice = data['shipping_price'];
+		if (global_cod_error && isCodPaymentSelected()) showEcontError(codErrorText());
 
 		global_info_message = data['shipping_price'] +
 			' ' +
